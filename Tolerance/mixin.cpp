@@ -50,5 +50,19 @@ int main()
 	GadgetWithNotEqual b{ 2 };
 	assert(a != b);
 
+	CTolerance tol1(5.0, 100.0);
+	assert(tol1.CheckTolerance(5.0));
+	assert(tol1.CheckTolerance(100.0));
+	assert(!tol1.CheckTolerance(4.9));
+	assert(!tol1.CheckTolerance(100.1));
+
+	CToleranceMin tol2(5.0);
+	assert(tol2.CheckTolerance(5.0));
+	assert(!tol2.CheckTolerance(4.9));
+
+	CToleranceMax tol3(100.0);
+	assert(tol3.CheckTolerance(100.0));
+	assert(!tol3.CheckTolerance(100.1));
+
 	return 0;
 }

@@ -56,9 +56,10 @@ template <
 >
 class CToleranceBase : public TolType<T>
 {
+public:
 	template<typename... U>
 	CToleranceBase(U... limits) :
-		TolType(limits...)
+		TolType<T>(limits...)
 	{}
 };
 
