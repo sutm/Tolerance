@@ -56,3 +56,5 @@ ComDevInc/Libdll/MiscTool/stiiostream
 ComDevInc/_PLEASE GET IT FROM COMDEVINC MAIN_
 STDLIBFIX/
 Intermediate/
+*.VC.opendb
+*.VC.db

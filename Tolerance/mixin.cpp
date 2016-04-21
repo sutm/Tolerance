@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include <assert.h>
 #include <type_traits>
+#include "tolerance.h"
 
 using namespace std;
 
@@ -21,15 +22,9 @@ bool operator!=(const NotEqualMixin<Derived>& lhs,
 }
 
 template<typename Derived>
-struct MinTol {};
+struct TestType {};
 
-template<typename Derived>
-struct MaxTol {};
-
-template<typename Derived>
-struct MinMaxTol {};
-
-
+// Gadget uses CRTP for mixins 
 template< template<typename> class... Mixins>
 struct Gadget : public Mixins<Gadget<Mixins...>>...
 {
@@ -43,7 +38,7 @@ struct Gadget : public Mixins<Gadget<Mixins...>>...
 };
 
 using GadgetEx = Gadget<>;
-using GadgetWithNotEqual = Gadget<NotEqualMixin, MinTol>;
+using GadgetWithNotEqual = Gadget<NotEqualMixin, TestType>;
 
 int main()
 {
