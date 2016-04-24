@@ -3,6 +3,8 @@
 #include "stdafx.h"
 #include <assert.h>
 #include <type_traits>
+#include <vector>
+#include <iostream>
 #include "tolerance.h"
 
 using namespace std;
@@ -50,19 +52,36 @@ int main()
 	GadgetWithNotEqual b{ 2 };
 	assert(a != b);
 
-	CTolerance tol1(5.0, 100.0);
+	vector<CToleranceBase*> tolerances;
+
+	CTolerance tol1("tol1", 5.0, 100.0);
+	tolerances.push_back(&tol1);
 	assert(tol1.CheckTolerance(5.0));
 	assert(tol1.CheckTolerance(100.0));
 	assert(!tol1.CheckTolerance(4.9));
 	assert(!tol1.CheckTolerance(100.1));
 
-	CToleranceMin tol2(5.0);
+	CToleranceMin tol2("tol2", 5.0);
+	tolerances.push_back(&tol2);
 	assert(tol2.CheckTolerance(5.0));
 	assert(!tol2.CheckTolerance(4.9));
 
-	CToleranceMax tol3(100.0);
+	CToleranceMax tol3("tol3", 100.0);
+	tolerances.push_back(&tol3);
 	assert(tol3.CheckTolerance(100.0));
 	assert(!tol3.CheckTolerance(100.1));
 
+	CToleranceCharMax tol4("tol4", 'B');
+	tolerances.push_back(&tol4);
+	assert(tol4.CheckTolerance('B'));
+	assert(!tol4.CheckTolerance('C'));
+
+	for (auto tol : tolerances)
+	{
+		cout << "Name: " << tol->GetName() << ", " <<
+			"MinTol: " << std::boolalpha << tol->IsMinTol() << ", " <<
+			"MaxTol: " << std::boolalpha << tol->IsMaxTol() << ", " <<
+			endl;
+	}
 	return 0;
 }
