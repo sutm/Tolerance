@@ -4,41 +4,10 @@
 #include <type_traits>
 
 template<typename T>
-struct MinTol
+struct DevTol
 {
-	MinTol(T dRejectLo) :
-		m_dRejectLo(dRejectLo)
-	{}
-
-	// check tolerance and return true if passes
-	bool CheckTolerance(T value) const
-	{
-		return !(value < m_dRejectLo);
-	}
-
-	T m_dRejectLo;
-};
-
-template<typename T>
-struct MaxTol 
-{
-	MaxTol(T dRejectHi) :
-		m_dRejectHi(dRejectHi)
-	{}
-
-	// check tolerance and return true if passes
-	bool CheckTolerance(T value) const
-	{
-		return !(value > m_dRejectHi);
-	}
-
-	T m_dRejectHi;
-};
-
-template<typename T>
-struct MinMaxTol
-{
-	MinMaxTol(T dRejectLo, T dRejectHi) : 
+public:
+	DevTol(T dRejectLo, T dRejectHi) : 
 		m_dRejectLo(dRejectLo),
 		m_dRejectHi(dRejectHi)
 	{}
@@ -49,8 +18,37 @@ struct MinMaxTol
 		return !(value < m_dRejectLo || value > m_dRejectHi);
 	}
 
+protected:
 	T m_dRejectLo;
 	T m_dRejectHi;
+};
+
+template<typename T>
+struct MinTol : public DevTol<T>
+{
+public:
+	MinTol(T dRejectLo) : DevTol(dRejectLo, T())
+	{}
+
+	// check tolerance and return true if passes
+	bool CheckTolerance(T value) const
+	{
+		return !(value < m_dRejectLo);
+	}
+};
+
+template<typename T>
+struct MaxTol : public DevTol<T>
+{
+public:
+	MaxTol(T dRejectHi) : DevTol(T(), dRejectHi)
+	{}
+
+	// check tolerance and return true if passes
+	bool CheckTolerance(T value) const
+	{
+		return !(value > m_dRejectHi);
+	}
 };
 
 struct CToleranceBase
@@ -69,29 +67,36 @@ struct CToleranceBase
 
 template <
 	typename T = double,
-	template<typename V> class TolType = MinMaxTol
+	template<typename V> class TolType = DevTol
 >
 class CToleranceImpl :	public CToleranceBase, 
 						public TolType<T>
 {
 public:
-	template<typename... U>
-	CToleranceImpl(std::string&& name, U&&... limits) :
+	template<typename U>
+	CToleranceImpl(U&& name, T dRejectLow, T dRejectHi) :
 		m_strName(name),
 		m_bEnable(false),
-		TolType<T>(limits...)
+		TolType<T>(dRejectLow, dRejectHi)
+	{}
+
+	template<typename U>
+	CToleranceImpl(U&& name, T dReject) :
+		m_strName(name),
+		m_bEnable(false),
+		TolType<T>(dReject)
 	{}
 
 	bool IsMinTol() const override
 	{
 		return (std::is_base_of<MinTol<T>, CToleranceImpl>::value ||
-			std::is_base_of<MinMaxTol<T>, CToleranceImpl>::value);
+			!std::is_base_of<MaxTol<T>, CToleranceImpl>::value);
 	}
 
 	bool IsMaxTol() const override
 	{
 		return (std::is_base_of<MaxTol<T>, CToleranceImpl>::value ||
-			std::is_base_of<MinMaxTol<T>, CToleranceImpl>::value);
+			!std::is_base_of<MinTol<T>, CToleranceImpl>::value);
 	}
 
 	std::string GetName() const override
@@ -125,7 +130,7 @@ private:
 	std::string m_strResultCode;
 };
 
-using CTolerance		= CToleranceImpl<>;
-using CToleranceMin		= CToleranceImpl<double, MinTol>;
-using CToleranceMax		= CToleranceImpl<double, MaxTol>;
-using CToleranceCharMax = CToleranceImpl<char, MaxTol>;
+typedef CToleranceImpl<>				CToleranceDev;
+typedef CToleranceImpl<double, MinTol>	CToleranceMin;
+typedef CToleranceImpl<double, MaxTol>	CToleranceMax;
+typedef CToleranceImpl<char, MaxTol>	CToleranceMaxChar;
