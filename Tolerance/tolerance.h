@@ -3,6 +3,8 @@
 #include <string>
 #include <type_traits>
 
+#include <memory>
+
 template<typename T>
 struct DevTol
 {
@@ -133,7 +135,73 @@ private:
 	std::string m_strResultCode;
 };
 
+// typedef for commonly used tolerance types
 typedef CToleranceImpl<>				CToleranceDev;
 typedef CToleranceImpl<double, MinTol>	CToleranceMin;
 typedef CToleranceImpl<double, MaxTol>	CToleranceMax;
 typedef CToleranceImpl<char, MaxTol>	CToleranceMaxChar;
+
+
+
+class CToleranceAny
+{
+public:
+	template <typename T>
+	CToleranceAny(T tol) : m_self(new model<T>(std::move(tol)))
+	{ }
+
+	CToleranceAny(const CToleranceAny& tol) : m_self(tol.m_self->copy())
+	{ }
+
+	CToleranceAny(CToleranceAny&& tol)
+	{
+		//m_self.reset(tol.m_self.release());
+		*this = std::move(tol);
+	}
+
+	CToleranceAny& operator=(const CToleranceAny& tol)
+	{ 
+		CToleranceAny tmp(tol); 
+		*this = std::move(tmp);
+		return *this; 
+	}
+
+	CToleranceAny& operator=(CToleranceAny&& tol)
+	{
+		*this = std::move(tol);
+		return *this; 
+	}
+
+	template<typename T>
+	bool CheckTolerance(T value) const
+	{
+		return (static_cast<model*>(m_self))->CheckTolerance(value);
+	}
+
+private:
+	struct concept_t 
+	{
+		virtual ~concept_t() {};
+		virtual concept_t* copy() const = 0;
+	};
+	
+	template <typename T>
+	struct model : concept_t 
+	{
+		model(T tol) : m_tol(std::move(tol)) 
+		{ }
+
+		concept_t* copy() const { return new model(*this); }
+
+		template<typename U>
+		bool CheckTolerance(U value) const
+		{
+			static_assert(is_same<U, typename T::value_type>::value, "Tolerance type and result should be of the same type!");
+			return m_tol.CheckTolerance(value);
+		}
+
+		T m_tol;
+	};
+
+	std::unique_ptr<const concept_t> m_self;
+};
