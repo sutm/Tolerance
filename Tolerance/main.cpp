@@ -11,8 +11,7 @@
 using namespace std;
 
 // TODO:
-// vector<CTolerance> - implement opaque type for value semantics
-// to check tolerance, get tolerance by name and pass in respective result
+// to check tolerance, get concrete tolerance and pass in respective result
 
 int main()
 {
@@ -47,5 +46,11 @@ int main()
 			"MinTol=" << boolalpha << setw(5) << tol->IsMinTol() << ", " <<
 			"MaxTol=" << boolalpha << setw(5) << tol->IsMaxTol() << endl;
 	}
+
+	tol1.SetEnabled(true);
+	tol3.SetEnabled(true);
+	vector<CToleranceBase*> vEnabledTol;
+	//transform(tolerances.begin(), tolerances.end(), back_inserter(vEnabledTol))
+
 	return 0;
 }
