@@ -73,6 +73,9 @@ class CToleranceImpl :	public CToleranceBase,
 						public TolType<T>
 {
 public:
+	typedef T			value_type;
+	typedef TolType<T>	tol_type;
+
 	template<typename U>
 	CToleranceImpl(U&& name, T dRejectLow, T dRejectHi) :
 		m_strName(name),
@@ -89,14 +92,14 @@ public:
 
 	bool IsMinTol() const override
 	{
-		return (std::is_base_of<MinTol<T>, CToleranceImpl>::value ||
-			!std::is_base_of<MaxTol<T>, CToleranceImpl>::value);
+		return (std::is_same<MinTol<T>, tol_type>::value ||
+				std::is_same<DevTol<T>, tol_type>::value);
 	}
 
 	bool IsMaxTol() const override
 	{
-		return (std::is_base_of<MaxTol<T>, CToleranceImpl>::value ||
-			!std::is_base_of<MinTol<T>, CToleranceImpl>::value);
+		return (std::is_same<MaxTol<T>, tol_type>::value ||
+				std::is_same<DevTol<T>, tol_type>::value);
 	}
 
 	std::string GetName() const override

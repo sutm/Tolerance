@@ -10,11 +10,14 @@
 
 using namespace std;
 
+// TODO:
+// vector<CTolerance> - implement opaque type for value semantics
+// to check tolerance, get tolerance by name and pass in respective result
+
 int main()
 {
 	vector<CToleranceBase*> tolerances;
-	// vector<CTolerance> - implement opaque type for value semantics
-
+	
 	CToleranceDev tol1("CToleranceDev", 5.0, 100.0);
 	tolerances.push_back(&tol1);
 	assert(tol1.CheckTolerance(5.0));
