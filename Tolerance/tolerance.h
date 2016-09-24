@@ -53,16 +53,44 @@ public:
 
 struct CToleranceBase
 {
-	virtual std::string GetName() const = 0;
+	template<typename U>
+	CToleranceBase(U&& name) :
+		m_strName(name),
+		m_bEnable(false)
+	{ }
+
+	std::string GetName() const
+	{
+		return m_strName;
+	}
 	
-	virtual bool IsEnabled() const = 0;
-	virtual void SetEnabled(bool bEnable) = 0;
+	bool IsEnabled() const
+	{
+		return m_bEnable;
+	}
 
-	virtual bool IsMinTol() const = 0;
-	virtual bool IsMaxTol() const = 0;
+	void SetEnabled(bool bEnable)
+	{
+		m_bEnable = bEnable;
+	}
 
-	virtual std::string GetResultCode() const = 0;
-	virtual void SetResultCode(const std::string& resultCode) = 0;
+	std::string GetResultCode() const
+	{
+		return m_strResultCode;
+	}
+
+	void SetResultCode(const std::string& resultCode)
+	{
+		m_strResultCode = resultCode;
+	}
+
+	virtual bool IsMinTol() const { return false; }
+	virtual bool IsMaxTol() const { return false; }
+
+protected:
+	std::string m_strName;
+	bool m_bEnable;
+	std::string m_strResultCode;
 };
 
 template <
@@ -78,15 +106,13 @@ public:
 
 	template<typename U>
 	CToleranceImpl(U&& name, T dRejectLow, T dRejectHi) :
-		m_strName(name),
-		m_bEnable(false),
+		CToleranceBase(std::forward<U>(name)),
 		TolType<T>(dRejectLow, dRejectHi)
 	{}
 
 	template<typename U>
 	CToleranceImpl(U&& name, T dReject) :
-		m_strName(name),
-		m_bEnable(false),
+		CToleranceBase(std::forward<U>(name)),
 		TolType<T>(dReject)
 	{}
 
@@ -101,36 +127,6 @@ public:
 		return (std::is_same<MaxTol<T>, tol_type>::value ||
 				std::is_same<DevTol<T>, tol_type>::value);
 	}
-
-	std::string GetName() const override
-	{
-		return m_strName;
-	}
-
-	bool IsEnabled() const override
-	{
-		return m_bEnable;
-	}
-
-	void SetEnabled(bool bEnable) override
-	{
-		m_bEnable = bEnable;
-	}
-	
-	std::string GetResultCode() const override
-	{
-		return m_strResultCode;
-	}
-
-	void SetResultCode(const std::string& resultCode) override
-	{
-		m_strResultCode = resultCode;
-	}
-
-private:
-	std::string m_strName;
-	bool m_bEnable;
-	std::string m_strResultCode;
 };
 
 // typedef for commonly used tolerance types
