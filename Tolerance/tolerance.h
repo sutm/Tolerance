@@ -56,7 +56,8 @@ struct CToleranceBase
 	template<typename U>
 	CToleranceBase(U&& name) :
 		m_strName(name),
-		m_bEnable(false)
+		m_bEnable(false),
+		m_nPriority(0)
 	{ }
 
 	std::string GetName() const
@@ -84,13 +85,34 @@ struct CToleranceBase
 		m_strResultCode = resultCode;
 	}
 
+	void SetPriority(int nPriority)
+	{
+		m_nPriority = nPriority;
+	}
+
+	int GetPriority() const
+	{
+		return m_nPriority;
+	}
+
 	virtual bool IsMinTol() const { return false; }
 	virtual bool IsMaxTol() const { return false; }
+
+	static bool enabled_tolerance(const CToleranceBase* pTol)
+	{
+		return pTol->m_bEnable;
+	}
+
+	static bool tolerance_by_priority(const CToleranceBase* pTol1, const CToleranceBase* pTol2)
+	{
+		return pTol1->m_nPriority < pTol2->m_nPriority;
+	}
 
 protected:
 	std::string m_strName;
 	bool m_bEnable;
 	std::string m_strResultCode;
+	int m_nPriority;
 };
 
 template <

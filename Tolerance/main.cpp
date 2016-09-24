@@ -3,6 +3,8 @@
 #include "stdafx.h"
 #include <assert.h>
 #include <type_traits>
+#include <algorithm>
+#include <iterator>
 #include <vector>
 #include <iostream>
 #include <iomanip>
@@ -49,8 +51,18 @@ int main()
 
 	tol1.SetEnabled(true);
 	tol3.SetEnabled(true);
-	vector<CToleranceBase*> vEnabledTol;
-	//transform(tolerances.begin(), tolerances.end(), back_inserter(vEnabledTol))
+	tol1.SetPriority(1);
+	tol3.SetPriority(0);
+	
+	vector<CToleranceBase*> enabled_tolerances;
+	copy_if(tolerances.begin(), tolerances.end(), back_inserter(enabled_tolerances), CToleranceBase::enabled_tolerance);
+	sort(enabled_tolerances.begin(), enabled_tolerances.end(), CToleranceBase::tolerance_by_priority);
+
+	for (auto itr = enabled_tolerances.begin(); itr != enabled_tolerances.end(); ++itr)
+	{
+		auto tol = *itr;
+		cout << left << setw(20) << tol->GetName() << ": " << "enabled" << endl;
+	}
 
 	return 0;
 }
