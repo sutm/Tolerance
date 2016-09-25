@@ -6,11 +6,33 @@
 #include <algorithm>
 #include <iterator>
 #include <vector>
+#include <array>
 #include <iostream>
 #include <iomanip>
 #include "tolerance.h"
+#include "result.h"
 
 using namespace std;
+
+enum INSP_RESULT_ID
+{
+	INSP_FAIL_BALL_HEIGHT=1,
+	INSP_FAIL_BALL_COPLAN,
+	INSP_FAIL_BALL_PITCH,
+	INSP_FAIL_BALL_QUALITY,
+	INSP_FAIL_WARPAGE,
+	INSP_FAIL_PAD_SIZE,
+	INSP_FAIL_COUNT
+};
+
+static const array<Result, INSP_FAIL_COUNT> results = {{
+	{INSP_FAIL_BALL_HEIGHT,		"Ball Height",		"BH"},
+	{INSP_FAIL_BALL_COPLAN,		"Coplan",			"CO"},
+	{INSP_FAIL_BALL_PITCH,		"Ball Pitch",		"PI"},
+	{INSP_FAIL_BALL_QUALITY,	"Ball Quality",		"BQ"},
+	{INSP_FAIL_WARPAGE,			"Warpage",			"WP"},
+	{INSP_FAIL_PAD_SIZE,		"Pad Size",			"DA"}
+}};
 
 void TestMinMax()
 {
@@ -135,11 +157,39 @@ void TestRelativeMode()
 	}
 }
 
+void TestResultCode()
+{
+	vector<CToleranceBase*> tolerances;
+
+	CToleranceDev tol1("Pad Size", 80.0, 100.0);
+	tolerances.push_back(&tol1);
+
+	CToleranceMin tol2("Ball Quality", 90.0);
+	tolerances.push_back(&tol2);
+
+	CToleranceDev tol3("Ball Pitch", 80.0, 100.0);
+	tolerances.push_back(&tol3);
+
+	cout << "TestResultCode" << endl;
+	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
+	{
+		auto tol = *itr;
+		auto name = tol->GetName();
+		auto res = find_if(results.begin(), results.end(), [name](const Result& result)
+		{
+			return result.TolName == name;
+		});
+		assert(res != results.end());
+		cout << left << setw(20) << tol->GetName() << ": " << res->ResultCode << endl;
+	}
+}
+
 int main()
 {
 	TestMinMax();
 	TestEnablePriority();
 	Test2D3DCategory();
 	TestRelativeMode();
+	TestResultCode();
 	return 0;
 }
