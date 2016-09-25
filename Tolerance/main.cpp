@@ -25,7 +25,7 @@ enum INSP_RESULT_ID
 	INSP_FAIL_COUNT
 };
 
-static const array<Result, INSP_FAIL_COUNT> results = {{
+static const array<Result, INSP_FAIL_COUNT> g_results = {{
 	{INSP_FAIL_BALL_HEIGHT,		"Ball Height",		"BH"},
 	{INSP_FAIL_BALL_COPLAN,		"Coplan",			"CO"},
 	{INSP_FAIL_BALL_PITCH,		"Ball Pitch",		"PI"},
@@ -70,7 +70,7 @@ void TestMinMax()
 	}
 }
 
-void TestEnablePriority()
+void TestEnable()
 {
 	vector<CToleranceBase*> tolerances;
 
@@ -96,14 +96,11 @@ void TestEnablePriority()
 
 	tol1.SetEnabled(true);
 	tol3.SetEnabled(true);
-	tol1.SetPriority(1);
-	tol3.SetPriority(0);
 
 	vector<CToleranceBase*> enabled_tolerances;
 	copy_if(tolerances.begin(), tolerances.end(), back_inserter(enabled_tolerances), CToleranceBase::enabled_tolerance);
-	sort(enabled_tolerances.begin(), enabled_tolerances.end(), CToleranceBase::tolerance_by_priority);
-
-	cout << "TestEnablePriority" << endl;
+	
+	cout << "TestEnable" << endl;
 	for (auto itr = enabled_tolerances.begin(); itr != enabled_tolerances.end(); ++itr)
 	{
 		auto tol = *itr;
@@ -162,32 +159,46 @@ void TestResultCode()
 	vector<CToleranceBase*> tolerances;
 
 	CToleranceDev tol1("Pad Size", 80.0, 100.0);
+	tol1.SetPriority(2);
 	tolerances.push_back(&tol1);
 
 	CToleranceMin tol2("Ball Quality", 90.0);
+	tol2.SetPriority(0);
 	tolerances.push_back(&tol2);
 
 	CToleranceDev tol3("Ball Pitch", 80.0, 100.0);
+	tol3.SetPriority(1);
 	tolerances.push_back(&tol3);
 
-	cout << "TestResultCode" << endl;
+	// assuming that above are failed tolerances, 
+	// store the failed results
+	vector<reference_wrapper<const Result>> failresults;
+
+	sort(tolerances.begin(), tolerances.end(), CToleranceBase::tolerance_by_priority);
 	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
 	{
 		auto tol = *itr;
 		auto name = tol->GetName();
-		auto res = find_if(results.begin(), results.end(), [name](const Result& result)
+		auto res = find_if(g_results.begin(), g_results.end(), [name](const Result& result)
 		{
 			return result.TolName == name;
 		});
-		assert(res != results.end());
-		cout << left << setw(20) << tol->GetName() << ": " << res->ResultCode << endl;
+		assert(res != g_results.end());
+		failresults.emplace_back(cref(*res));
+	}
+	
+	cout << "TestResultCode" << endl;
+	for (auto itr = failresults.begin(); itr != failresults.end(); ++itr)
+	{
+		auto res = *itr;
+		cout << left << setw(20) << res.get().TolName << ": " << res.get().ResultCode << endl;
 	}
 }
 
 int main()
 {
 	TestMinMax();
-	TestEnablePriority();
+	TestEnable();
 	Test2D3DCategory();
 	TestRelativeMode();
 	TestResultCode();
