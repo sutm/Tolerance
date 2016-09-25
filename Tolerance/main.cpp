@@ -38,24 +38,24 @@ void TestMinMax()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDev tol1("CToleranceDev", 5.0, 100.0);
+	CToleranceDev tol1("CToleranceDev", "", 5.0, 100.0);
 	tolerances.push_back(&tol1);
 	assert(tol1.CheckTolerance(5.0));
 	assert(tol1.CheckTolerance(100.0));
 	assert(!tol1.CheckTolerance(4.9));
 	assert(!tol1.CheckTolerance(100.1));
 
-	CToleranceMin tol2("CToleranceMin", 5.0);
+	CToleranceMin tol2("CToleranceMin", "", 5.0);
 	tolerances.push_back(&tol2);
 	assert(tol2.CheckTolerance(5.0));
 	assert(!tol2.CheckTolerance(4.9));
 
-	CToleranceMax tol3("CToleranceMax", 100.0);
+	CToleranceMax tol3("CToleranceMax", "", 100.0);
 	tolerances.push_back(&tol3);
 	assert(tol3.CheckTolerance(100.0));
 	assert(!tol3.CheckTolerance(100.1));
 
-	CToleranceMaxChar tol4("CToleranceMaxChar", 'B');
+	CToleranceMaxChar tol4("CToleranceMaxChar", "", 'B');
 	tolerances.push_back(&tol4);
 	assert(tol4.CheckTolerance('B'));
 	assert(!tol4.CheckTolerance('C'));
@@ -74,16 +74,16 @@ void TestEnable()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDev tol1("CToleranceDev", 5.0, 100.0);
+	CToleranceDev tol1("CToleranceDev", "", 5.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMin tol2("CToleranceMin", 5.0);
+	CToleranceMin tol2("CToleranceMin", "", 5.0);
 	tolerances.push_back(&tol2);
 
-	CToleranceMax tol3("CToleranceMax", 100.0);
+	CToleranceMax tol3("CToleranceMax", "", 100.0);
 	tolerances.push_back(&tol3);
 
-	CToleranceMaxChar tol4("CToleranceMaxChar", 'B');
+	CToleranceMaxChar tol4("CToleranceMaxChar", "", 'B');
 	tolerances.push_back(&tol4);
 
 	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
@@ -112,13 +112,13 @@ void Test2D3DCategory()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDev tol1("Ball Height", 5.0, 100.0, ToleranceEnum::TolCategory2D3D);
+	CToleranceDev tol1("Ball Height", "", 5.0, 100.0, ToleranceEnum::TolCategory2D3D);
 	tolerances.push_back(&tol1);
 
-	CToleranceMax tol2("Warpage", 5.0, ToleranceEnum::TolCategory3D);
+	CToleranceMax tol2("Warpage", "", 5.0, ToleranceEnum::TolCategory3D);
 	tolerances.push_back(&tol2);
 
-	CToleranceDev tol3("Ball Pitch", 80.0, 100.0, ToleranceEnum::TolCategory2D);
+	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0, ToleranceEnum::TolCategory2D);
 	tolerances.push_back(&tol3);
 
 	cout << "Test2D3DCategory" << endl;
@@ -135,13 +135,13 @@ void TestRelativeMode()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDev tol1("Pad Size", 80.0, 100.0, ToleranceEnum::TolCategory2D, ToleranceEnum::Relative);
+	CToleranceDev tol1("Pad Size", "", 80.0, 100.0, ToleranceEnum::TolCategory2D, ToleranceEnum::Relative);
 	tolerances.push_back(&tol1);
 
-	CToleranceMin tol2("Ball Quality", 90.0, ToleranceEnum::TolCategory2D, ToleranceEnum::NonRelative);
+	CToleranceMin tol2("Ball Quality", "", 90.0, ToleranceEnum::TolCategory2D, ToleranceEnum::NonRelative);
 	tolerances.push_back(&tol2);
 
-	CToleranceDev tol3("Ball Pitch", 80.0, 100.0, ToleranceEnum::TolCategory2D, ToleranceEnum::RelativeAny);
+	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0, ToleranceEnum::TolCategory2D, ToleranceEnum::RelativeAny);
 	tolerances.push_back(&tol3);
 
 	cout << "TestRelativeMode" << endl;
@@ -158,15 +158,15 @@ void TestResultCode()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDev tol1("Pad Size", 80.0, 100.0);
+	CToleranceDev tol1("Pad Size", "", 80.0, 100.0);
 	tol1.SetPriority(2);
 	tolerances.push_back(&tol1);
 
-	CToleranceMin tol2("Ball Quality", 90.0);
+	CToleranceMin tol2("Ball Quality", "", 90.0);
 	tol2.SetPriority(0);
 	tolerances.push_back(&tol2);
 
-	CToleranceDev tol3("Ball Pitch", 80.0, 100.0);
+	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0);
 	tol3.SetPriority(1);
 	tolerances.push_back(&tol3);
 

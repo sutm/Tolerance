@@ -76,11 +76,12 @@ namespace ToleranceEnum
 // Abstract base class for tolerance
 struct CToleranceBase
 {
-	template<typename U>
-	CToleranceBase(	U&& name,  
+	CToleranceBase(	std::string name,
+					std::string desc,
 					ToleranceEnum::ToleranceCategory tolCategory,
 					ToleranceEnum::RelativeMode relmode) :
-		m_strName(name),
+		m_strName(std::move(name)),
+		m_strDesc(std::move(desc)),
 		m_bEnable(false),
 		m_nPriority(0),
 		m_RelativeMode(relmode),
@@ -92,6 +93,16 @@ struct CToleranceBase
 		return m_strName;
 	}
 	
+	std::string GetDesc() const
+	{
+		return m_strDesc;
+	}
+	
+	void SetDesc(std::string desc)
+	{
+		m_strDesc = std::move(desc);
+	}
+
 	bool IsEnabled() const
 	{
 		return m_bEnable;
@@ -142,7 +153,8 @@ struct CToleranceBase
 	virtual bool IsMaxTol() const = 0;
 	
 protected:
-	std::string m_strName;
+	const std::string m_strName;
+	std::string m_strDesc;
 	bool m_bEnable;
 	std::string m_strResultCode;
 	int m_nPriority;
@@ -166,19 +178,17 @@ public:
 	typedef T			value_type;
 	typedef TolCheck<T>	tol_check;
 
-	template<typename U>
-	CToleranceImpl(	U&& name, T dRejectLow, T dRejectHi,
+	CToleranceImpl(	std::string name, std::string desc, T dRejectLow, T dRejectHi,
 					ToleranceEnum::ToleranceCategory tolCategory=ToleranceEnum::TolCategory2D,
 					ToleranceEnum::RelativeMode relmode=ToleranceEnum::RelativeAny) :
-		CToleranceBase(std::forward<U>(name), tolCategory, relmode),
+		CToleranceBase(std::move(name), std::move(desc), tolCategory, relmode),
 		TolCheck<T>(dRejectLow, dRejectHi)
 	{}
 
-	template<typename U>
-	CToleranceImpl(	U&& name, T dReject, 
+	CToleranceImpl(std::string name, std::string desc, T dReject,
 					ToleranceEnum::ToleranceCategory tolCategory=ToleranceEnum::TolCategory2D,
 					ToleranceEnum::RelativeMode relmode=ToleranceEnum::RelativeAny) :
-		CToleranceBase(std::forward<U>(name), tolCategory, relmode),
+		CToleranceBase(std::move(name), std::move(desc), tolCategory, relmode),
 		TolCheck<T>(dReject)
 	{}
 
