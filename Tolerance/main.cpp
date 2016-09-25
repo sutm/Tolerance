@@ -12,7 +12,7 @@
 
 using namespace std;
 
-void MinMaxTol()
+void TestMinMax()
 {
 	vector<CToleranceBase*> tolerances;
 
@@ -38,7 +38,7 @@ void MinMaxTol()
 	assert(tol4.CheckTolerance('B'));
 	assert(!tol4.CheckTolerance('C'));
 
-	cout << "MinMaxTol test" << endl;
+	cout << "TestMinMax" << endl;
 	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
 	{
 		auto tol = *itr;
@@ -48,7 +48,7 @@ void MinMaxTol()
 	}
 }
 
-void EnablingTolPriority()
+void TestEnablePriority()
 {
 	vector<CToleranceBase*> tolerances;
 
@@ -81,7 +81,7 @@ void EnablingTolPriority()
 	copy_if(tolerances.begin(), tolerances.end(), back_inserter(enabled_tolerances), CToleranceBase::enabled_tolerance);
 	sort(enabled_tolerances.begin(), enabled_tolerances.end(), CToleranceBase::tolerance_by_priority);
 
-	cout << "EnablingTolPriority test" << endl;
+	cout << "TestEnablePriority" << endl;
 	for (auto itr = enabled_tolerances.begin(); itr != enabled_tolerances.end(); ++itr)
 	{
 		auto tol = *itr;
@@ -89,33 +89,57 @@ void EnablingTolPriority()
 	}
 }
 
-void Tol2D3DCategory()
+void Test2D3DCategory()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDev2D3D tol1("Ball Height", 5.0, 100.0);
+	CToleranceDev tol1("Ball Height", 5.0, 100.0, ToleranceEnum::TolCategory2D3D);
 	tolerances.push_back(&tol1);
 
-	CToleranceMax3D tol2("Warpage", 5.0);
+	CToleranceMax tol2("Warpage", 5.0, ToleranceEnum::TolCategory3D);
 	tolerances.push_back(&tol2);
 
-	CToleranceDev tol3("Ball Pitch", 80.0, 100.0);
+	CToleranceDev tol3("Ball Pitch", 80.0, 100.0, ToleranceEnum::TolCategory2D);
 	tolerances.push_back(&tol3);
 
-	cout << "Tol2D3DCategory test" << endl;
+	cout << "Test2D3DCategory" << endl;
 	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
 	{
 		auto tol = *itr;
 		cout << left << setw(20) << tol->GetName() << ": " <<
-			"2D=" << boolalpha << setw(5) << tol->Is2DTol() << ", " <<
-			"3D=" << boolalpha << setw(5) << tol->Is3DTol() << endl;
+			"2D=" << boolalpha << setw(5) << tol->Is2D() << ", " <<
+			"3D=" << boolalpha << setw(5) << tol->Is3D() << endl;
+	}
+}
+
+void TestRelativeMode()
+{
+	vector<CToleranceBase*> tolerances;
+
+	CToleranceDev tol1("Pad Size", 80.0, 100.0, ToleranceEnum::TolCategory2D, ToleranceEnum::Relative);
+	tolerances.push_back(&tol1);
+
+	CToleranceMin tol2("Ball Quality", 90.0, ToleranceEnum::TolCategory2D, ToleranceEnum::NonRelative);
+	tolerances.push_back(&tol2);
+
+	CToleranceDev tol3("Ball Pitch", 80.0, 100.0, ToleranceEnum::TolCategory2D, ToleranceEnum::RelativeAny);
+	tolerances.push_back(&tol3);
+
+	cout << "TestRelativeMode" << endl;
+	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
+	{
+		auto tol = *itr;
+		cout << left << setw(20) << tol->GetName() << ": " <<
+			"Relative=" << boolalpha << setw(5) << tol->IsRelative() << ", " <<
+			"NonRelative=" << boolalpha << setw(5) << tol->IsNonRelative() << endl;
 	}
 }
 
 int main()
 {
-	MinMaxTol();
-	EnablingTolPriority();
-	Tol2D3DCategory();
+	TestMinMax();
+	TestEnablePriority();
+	Test2D3DCategory();
+	TestRelativeMode();
 	return 0;
 }

@@ -56,45 +56,35 @@ public:
 	}
 };
 
-// Tolerance Categories 
-// takes one of the following form:
-// - Tol2D: 2D tolerance (default)
-// - Tol3D: 3D tolerance
-// - Tol2D3D: 2D tolerance, or 3D tolerance if 3D is available
-//
-struct Tol2D
-{ };
+namespace ToleranceEnum
+{
+	enum ToleranceCategory
+	{
+		TolCategory2D = 0,
+		TolCategory3D,
+		TolCategory2D3D
+	};
 
-struct Tol3D
-{ };
-
-struct Tol2D3D : public Tol2D, public Tol3D
-{ };
-
-// Tolerance Relative Mode 
-// takes one of the following form:
-// - Relative: can be relative or non-relative (default)
-// - NonRelativeOnly: non-relative only
-// - RelativeOnly: relative only
-//
-struct RelativeOnly
-{ };
-
-struct NonRelativeOnly
-{ };
-
-struct Relative : public RelativeOnly, public NonRelativeOnly
-{ };
-
+	enum RelativeMode
+	{
+		RelativeAny = 0,
+		Relative,
+		NonRelative
+	};
+};
 
 // Abstract base class for tolerance
 struct CToleranceBase
 {
 	template<typename U>
-	CToleranceBase(U&& name) :
+	CToleranceBase(	U&& name,  
+					ToleranceEnum::ToleranceCategory tolCategory,
+					ToleranceEnum::RelativeMode relmode) :
 		m_strName(name),
 		m_bEnable(false),
-		m_nPriority(0)
+		m_nPriority(0),
+		m_RelativeMode(relmode),
+		m_TolCategory(tolCategory)
 	{ }
 
 	std::string GetName() const
@@ -142,16 +132,22 @@ struct CToleranceBase
 		return pTol1->m_nPriority < pTol2->m_nPriority;
 	}
 
+	bool IsRelative() const { return m_RelativeMode==ToleranceEnum::Relative || m_RelativeMode==ToleranceEnum::RelativeAny; }
+	bool IsNonRelative() const { return m_RelativeMode==ToleranceEnum::NonRelative || m_RelativeMode==ToleranceEnum::RelativeAny; }
+
+	bool Is2D() const { return m_TolCategory==ToleranceEnum::TolCategory2D || m_TolCategory==ToleranceEnum::TolCategory2D3D; }
+	bool Is3D() const { return m_TolCategory==ToleranceEnum::TolCategory3D || m_TolCategory==ToleranceEnum::TolCategory2D3D; }
+
 	virtual bool IsMinTol() const = 0;
 	virtual bool IsMaxTol() const = 0;
-	virtual bool Is2DTol() const = 0;
-	virtual bool Is3DTol() const = 0;
-
+	
 protected:
 	std::string m_strName;
 	bool m_bEnable;
 	std::string m_strResultCode;
 	int m_nPriority;
+	const ToleranceEnum::ToleranceCategory m_TolCategory;
+	const ToleranceEnum::RelativeMode m_RelativeMode;
 };
 
 
@@ -159,12 +155,9 @@ protected:
 // parameterized by the following:
 // - T: value type of tolerance (double, int, char, string)
 // - TolCheck: tolerance checker (min, max)
-// - TolCateogry: tolerance category (2D, 3D)
-// - RelativeMode: relative mode (relative, non-relative)
 template <
 	typename T = double,
-	template<typename V> class TolCheck = DevTol,
-	typename TolCategory = Tol2D
+	template<typename V> class TolCheck = DevTol
 >
 class CToleranceImpl :	public CToleranceBase, 
 						public TolCheck<T>
@@ -172,17 +165,20 @@ class CToleranceImpl :	public CToleranceBase,
 public:
 	typedef T			value_type;
 	typedef TolCheck<T>	tol_check;
-	typedef TolCategory tol_category;
 
 	template<typename U>
-	CToleranceImpl(U&& name, T dRejectLow, T dRejectHi) :
-		CToleranceBase(std::forward<U>(name)),
+	CToleranceImpl(	U&& name, T dRejectLow, T dRejectHi,
+					ToleranceEnum::ToleranceCategory tolCategory=ToleranceEnum::TolCategory2D,
+					ToleranceEnum::RelativeMode relmode=ToleranceEnum::RelativeAny) :
+		CToleranceBase(std::forward<U>(name), tolCategory, relmode),
 		TolCheck<T>(dRejectLow, dRejectHi)
 	{}
 
 	template<typename U>
-	CToleranceImpl(U&& name, T dReject) :
-		CToleranceBase(std::forward<U>(name)),
+	CToleranceImpl(	U&& name, T dReject, 
+					ToleranceEnum::ToleranceCategory tolCategory=ToleranceEnum::TolCategory2D,
+					ToleranceEnum::RelativeMode relmode=ToleranceEnum::RelativeAny) :
+		CToleranceBase(std::forward<U>(name), tolCategory, relmode),
 		TolCheck<T>(dReject)
 	{}
 
@@ -197,16 +193,6 @@ public:
 		return (std::is_same<MaxTol<T>, tol_check>::value ||
 				std::is_same<DevTol<T>, tol_check>::value);
 	}
-
-	bool Is2DTol() const override
-	{
-		return (std::is_base_of<Tol2D, tol_category>::value);
-	}
-
-	bool Is3DTol() const override
-	{
-		return (std::is_base_of<Tol3D, tol_category>::value);
-	}
 };
 
 // typedef for commonly used tolerance types
@@ -214,9 +200,3 @@ typedef CToleranceImpl<>						CToleranceDev;
 typedef CToleranceImpl<double, MinTol>			CToleranceMin;
 typedef CToleranceImpl<double, MaxTol>			CToleranceMax;
 typedef CToleranceImpl<char, MaxTol>			CToleranceMaxChar;
-
-typedef CToleranceImpl<double, DevTol, Tol3D>	CToleranceDev3D;
-typedef CToleranceImpl<double, MaxTol, Tol3D>	CToleranceMax3D;
-
-typedef CToleranceImpl<double, DevTol, Tol2D3D>	CToleranceDev2D3D;
-typedef CToleranceImpl<double, MaxTol, Tol2D3D>	CToleranceMax2D3D;
