@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <type_traits>
 #include <algorithm>
+#include <functional>
 #include <iterator>
 #include <vector>
 #include <array>
@@ -16,7 +17,8 @@ using namespace std;
 
 enum INSP_RESULT_ID
 {
-	INSP_FAIL_BALL_HEIGHT=1,
+	INSP_PASS=0,
+	INSP_FAIL_BALL_HEIGHT,
 	INSP_FAIL_BALL_COPLAN,
 	INSP_FAIL_BALL_PITCH,
 	INSP_FAIL_BALL_QUALITY,
@@ -26,12 +28,12 @@ enum INSP_RESULT_ID
 };
 
 static const array<Result, INSP_FAIL_COUNT> g_results = {{
-	{INSP_FAIL_BALL_HEIGHT,		"Ball Height",		"BH"},
-	{INSP_FAIL_BALL_COPLAN,		"Coplan",			"CO"},
-	{INSP_FAIL_BALL_PITCH,		"Ball Pitch",		"PI"},
-	{INSP_FAIL_BALL_QUALITY,	"Ball Quality",		"BQ"},
-	{INSP_FAIL_WARPAGE,			"Warpage",			"WP"},
-	{INSP_FAIL_PAD_SIZE,		"Pad Size",			"DA"}
+	{"Ball Height",		INSP_FAIL_BALL_HEIGHT	},
+	{"Coplan",			INSP_FAIL_BALL_COPLAN	},
+	{"Ball Pitch",		INSP_FAIL_BALL_PITCH	},
+	{"Ball Quality",	INSP_FAIL_BALL_QUALITY	},
+	{"Warpage",			INSP_FAIL_WARPAGE		},
+	{"Pad Size",		INSP_FAIL_PAD_SIZE		}
 }};
 
 void TestMinMax()
@@ -174,25 +176,9 @@ void TestResultCode()
 	// store the failed results
 	vector<reference_wrapper<const Result>> failresults;
 
-	sort(tolerances.begin(), tolerances.end(), CToleranceBase::tolerance_by_priority);
-	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
-	{
-		auto tol = *itr;
-		auto name = tol->GetName();
-		auto res = find_if(g_results.begin(), g_results.end(), [name](const Result& result)
-		{
-			return result.TolName == name;
-		});
-		assert(res != g_results.end());
-		failresults.emplace_back(cref(*res));
-	}
+	CModuleResult<INSP_FAIL_COUNT> moduleResult(g_results);
+
 	
-	cout << "TestResultCode" << endl;
-	for (auto itr = failresults.begin(); itr != failresults.end(); ++itr)
-	{
-		auto res = *itr;
-		cout << left << setw(20) << res.get().TolName << ": " << res.get().ResultCode << endl;
-	}
 }
 
 int main()
