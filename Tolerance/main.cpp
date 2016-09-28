@@ -156,29 +156,41 @@ void TestRelativeMode()
 	}
 }
 
-void TestResultCode()
+void TestFailResult()
 {
-	vector<CToleranceBase*> tolerances;
+	CModuleResult<INSP_FAIL_COUNT> moduleResult(g_results);
 
 	CToleranceDev tol1("Pad Size", "", 80.0, 100.0);
 	tol1.SetPriority(2);
-	tolerances.push_back(&tol1);
+	moduleResult.AddFailResult(&tol1, "Pad Size: 40 (80.0, 100), Fail");
 
 	CToleranceMin tol2("Ball Quality", "", 90.0);
-	tol2.SetPriority(0);
-	tolerances.push_back(&tol2);
+	tol2.SetPriority(1);
+	moduleResult.AddFailResult(&tol2, "Ball Quality: 40 < 90.0, Fail");
 
 	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0);
-	tol3.SetPriority(1);
-	tolerances.push_back(&tol3);
-
-	// assuming that above are failed tolerances, 
-	// store the failed results
-	vector<reference_wrapper<const Result>> failresults;
-
-	CModuleResult<INSP_FAIL_COUNT> moduleResult(g_results);
-
+	tol3.SetPriority(0);
+	moduleResult.AddFailResult(&tol3, "Ball Pitch: 101 (80.0, 100), Fail");
+		
+	cout << "TestFailResult" << endl;
+	int resultId = moduleResult.GetFirstFailResultId();
+	auto itr = find_if(g_results.begin(), g_results.end(), [resultId](const Result& res)
+	{
+		return res.m_nResultId == resultId;
+	});
 	
+	cout << left << setw(20) << itr->m_strTolName << ": First fail result" << endl;
+
+	auto resultIds = moduleResult.GetFailResultIds();
+	for (auto itr3 = resultIds.begin(); itr3 != resultIds.end(); ++itr3)
+	{
+		resultId = *itr3;
+		auto itr2 = find_if(g_results.begin(), g_results.end(), [resultId](const Result& res)
+		{
+			return res.m_nResultId == resultId;
+		});
+		cout << left << setw(20) << itr2->m_strTolName << ": fail result" << endl;
+	}
 }
 
 int main()
@@ -187,6 +199,6 @@ int main()
 	TestEnable();
 	Test2D3DCategory();
 	TestRelativeMode();
-	TestResultCode();
+	TestFailResult();
 	return 0;
 }
