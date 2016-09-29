@@ -31,15 +31,16 @@ public:
 		m_ResultDescs.emplace(make_pair(pTol->GetName(), strResultDesc));
 	}
 
-	int GetFirstFailResultId()
+	// returns Result and Description of the first failed tolerance
+	std::pair<Result, std::string> GetFirstFailResult()
 	{
 		if (m_FailTolerances.empty())
-			return INSP_PASS;
+			return make_pair<Result, std::string>(Result(), "");
 
 		std::nth_element(m_FailTolerances.begin(), m_FailTolerances.begin(), m_FailTolerances.end(), CToleranceBase::tolerance_by_priority);
-		int nResultId = GetResultIdByTolName(m_FailTolerances.front());
-
-		return nResultId;
+		auto strName = m_FailTolerances.front()->GetName();
+		Result res = { strName, GetResultIdByTolName(strName) };
+		return std::make_pair(res, m_ResultDescs[strName]);
 	}
 
 	std::vector<int> GetFailResultIds()
@@ -50,15 +51,17 @@ public:
 
 		using namespace std::placeholders;
 		std::sort(m_FailTolerances.begin(), m_FailTolerances.end(), CToleranceBase::tolerance_by_priority);
-		std::transform(m_FailTolerances.begin(), m_FailTolerances.end(), std::back_inserter(vResultIds), std::bind(&CModuleResult<RESULT_COUNT>::GetResultIdByTolName, this, _1));
+		std::transform(m_FailTolerances.begin(), m_FailTolerances.end(), std::back_inserter(vResultIds), [&](const CToleranceBase* pTol)
+		{
+			return GetResultIdByTolName(pTol->GetName());
+		});
 		
 		return vResultIds;
 	}
 
 private:
-	int GetResultIdByTolName(const CToleranceBase* pTol) const
+	int GetResultIdByTolName(const std::string& strName) const
 	{
-		auto strName = pTol->GetName();
 		auto itr = std::find_if(m_ResultIds.begin(), m_ResultIds.end(), [strName](const Result& result)
 		{
 			return result.m_strTolName == strName;

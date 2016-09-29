@@ -8,6 +8,7 @@
 #include <iterator>
 #include <vector>
 #include <array>
+#include <tuple>
 #include <iostream>
 #include <iomanip>
 #include "tolerance.h"
@@ -88,14 +89,6 @@ void TestEnable()
 	CToleranceMaxChar tol4("CToleranceMaxChar", "", 'B');
 	tolerances.push_back(&tol4);
 
-	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
-	{
-		auto tol = *itr;
-		cout << left << setw(20) << tol->GetName() << ": " <<
-			"MinTol=" << boolalpha << setw(5) << tol->IsMinTol() << ", " <<
-			"MaxTol=" << boolalpha << setw(5) << tol->IsMaxTol() << endl;
-	}
-
 	tol1.SetEnabled(true);
 	tol3.SetEnabled(true);
 
@@ -161,7 +154,7 @@ void TestFailResult()
 	CModuleResult<INSP_FAIL_COUNT> moduleResult(g_results);
 
 	CToleranceDev tol1("Pad Size", "", 80.0, 100.0);
-	tol1.SetPriority(2);
+	tol1.SetPriority(0);
 	moduleResult.AddFailResult(&tol1, "Pad Size: 40 (80.0, 100), Fail");
 
 	CToleranceMin tol2("Ball Quality", "", 90.0);
@@ -169,28 +162,18 @@ void TestFailResult()
 	moduleResult.AddFailResult(&tol2, "Ball Quality: 40 < 90.0, Fail");
 
 	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0);
-	tol3.SetPriority(0);
+	tol3.SetPriority(2);
 	moduleResult.AddFailResult(&tol3, "Ball Pitch: 101 (80.0, 100), Fail");
 		
 	cout << "TestFailResult" << endl;
-	int resultId = moduleResult.GetFirstFailResultId();
-	auto itr = find_if(g_results.begin(), g_results.end(), [resultId](const Result& res)
-	{
-		return res.m_nResultId == resultId;
-	});
-	
-	cout << left << setw(20) << itr->m_strTolName << ": First fail result" << endl;
+	Result result;
+	string strResultDesc;
+	tie(result, strResultDesc) = moduleResult.GetFirstFailResult();
+	cout << left << setw(20) << result.m_strTolName << ": " << result.m_nResultId << ", " << strResultDesc << endl;
 
 	auto resultIds = moduleResult.GetFailResultIds();
-	for (auto itr3 = resultIds.begin(); itr3 != resultIds.end(); ++itr3)
-	{
-		resultId = *itr3;
-		auto itr2 = find_if(g_results.begin(), g_results.end(), [resultId](const Result& res)
-		{
-			return res.m_nResultId == resultId;
-		});
-		cout << left << setw(20) << itr2->m_strTolName << ": fail result" << endl;
-	}
+	for (auto itr = resultIds.begin(); itr != resultIds.end(); ++itr)
+		cout << left << setw(20) << "Fail Tolerance Id: " << *itr << endl;
 }
 
 int main()
