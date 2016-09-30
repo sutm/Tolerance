@@ -60,7 +60,7 @@ namespace ToleranceCategory
 {
 	const int TolCategory2D = 1;
 	const int TolCategory3D = 2;
-	const int TolCategory2D3D = 3;
+	const int TolCategory2D3D = TolCategory2D | TolCategory3D;
 };
 
 namespace ToleranceEnum
@@ -78,14 +78,12 @@ struct CToleranceBase
 {
 	CToleranceBase(	std::string name,
 					std::string desc,
-					int tolCategory,
 					ToleranceEnum::RelativeMode relmode) :
 		m_strName(std::move(name)),
 		m_strDesc(std::move(desc)),
 		m_bEnable(false),
 		m_nPriority(0),
 		m_RelativeMode(relmode)
-		//m_TolCategory(tolCategory)
 	{ }
 
 	std::string GetName() const
@@ -146,8 +144,8 @@ struct CToleranceBase
 	bool IsRelative() const { return m_RelativeMode==ToleranceEnum::Relative || m_RelativeMode==ToleranceEnum::RelativeAny; }
 	bool IsNonRelative() const { return m_RelativeMode==ToleranceEnum::NonRelative || m_RelativeMode==ToleranceEnum::RelativeAny; }
 
-	bool Is2D() const { return true; } //{ return m_TolCategory==ToleranceEnum::TolCategory2D || m_TolCategory==ToleranceEnum::TolCategory2D3D; }
-	bool Is3D() const { return true; } //{ return m_TolCategory==ToleranceEnum::TolCategory3D || m_TolCategory==ToleranceEnum::TolCategory2D3D; }
+	virtual bool Is2D() const = 0;
+	virtual bool Is3D() const = 0;
 
 	virtual bool IsMinTol() const = 0;
 	virtual bool IsMaxTol() const = 0;
@@ -158,45 +156,43 @@ protected:
 	bool m_bEnable;
 	std::string m_strResultCode;
 	int m_nPriority;
-	//const ToleranceEnum::ToleranceCategory m_TolCategory;
 	const ToleranceEnum::RelativeMode m_RelativeMode;
 };
 
 template<int TolCategory>
 struct TolTraits
 {
-	static const bool is_2D = (TolCategory & ToleranceCategory::TolCategory2D);
-	static const bool is_3D = (TolCategory & ToleranceCategory::TolCategory3D);
+	static const bool is_2D = (TolCategory & ToleranceCategory::TolCategory2D) != 0;
+	static const bool is_3D = (TolCategory & ToleranceCategory::TolCategory3D) != 0;
 };
-
-TolTraits<ToleranceCategory::TolCategory2D3D> t;
 
 // template class for tolerance
 // parameterized by the following:
 // - T: value type of tolerance (double, int, char, string)
 // - TolCheck: tolerance checker (min, max)
+// - TolCategory: 2D, 3D tolerance
 template <
 	typename T = double,
-	template<typename V> class TolCheck = DevTol
+	template<typename V> class TolCheck = DevTol,
+	int TolCategory = ToleranceCategory::TolCategory2D3D
 >
 class CToleranceImpl :	public CToleranceBase, 
-						public TolCheck<T>
+						public TolCheck<T>,
+						private TolTraits<TolCategory>
 {
 public:
 	typedef T			value_type;
 	typedef TolCheck<T>	tol_check;
 
 	CToleranceImpl(	std::string name, std::string desc, T dRejectLow, T dRejectHi,
-					int tolCategory=ToleranceCategory::TolCategory2D,
 					ToleranceEnum::RelativeMode relmode=ToleranceEnum::RelativeAny) :
-		CToleranceBase(std::move(name), std::move(desc), tolCategory, relmode),
+		CToleranceBase(std::move(name), std::move(desc), relmode),
 		TolCheck<T>(dRejectLow, dRejectHi)
 	{}
 
 	CToleranceImpl(std::string name, std::string desc, T dReject,
-					int tolCategory=ToleranceCategory::TolCategory2D,
 					ToleranceEnum::RelativeMode relmode=ToleranceEnum::RelativeAny) :
-		CToleranceBase(std::move(name), std::move(desc), tolCategory, relmode),
+		CToleranceBase(std::move(name), std::move(desc), relmode),
 		TolCheck<T>(dReject)
 	{}
 
@@ -210,6 +206,16 @@ public:
 	{
 		return (std::is_same<MaxTol<T>, tol_check>::value ||
 				std::is_same<DevTol<T>, tol_check>::value);
+	}
+
+	bool Is2D() const override
+	{
+		return is_2D;
+	}
+
+	bool Is3D() const override
+	{
+		return is_3D;
 	}
 };
 

@@ -107,13 +107,13 @@ void Test2D3DCategory()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDev tol1("Ball Height", "", 5.0, 100.0, ToleranceCategory::TolCategory2D3D);
+	CToleranceImpl<double, DevTol, ToleranceCategory::TolCategory2D3D>  tol1("Ball Height", "", 5.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMax tol2("Warpage", "", 5.0, ToleranceCategory::TolCategory3D);
+	CToleranceImpl<double, MaxTol, ToleranceCategory::TolCategory3D> tol2("Warpage", "", 5.0);
 	tolerances.push_back(&tol2);
 
-	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0, ToleranceCategory::TolCategory2D);
+	CToleranceImpl<double, DevTol, ToleranceCategory::TolCategory2D> tol3("Ball Pitch", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 
 	cout << "Test2D3DCategory" << endl;
@@ -130,13 +130,13 @@ void TestRelativeMode()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDev tol1("Pad Size", "", 80.0, 100.0, ToleranceCategory::TolCategory2D, ToleranceEnum::Relative);
+	CToleranceDev tol1("Pad Size", "", 80.0, 100.0, ToleranceEnum::Relative);
 	tolerances.push_back(&tol1);
 
-	CToleranceMin tol2("Ball Quality", "", 90.0, ToleranceCategory::TolCategory2D, ToleranceEnum::NonRelative);
+	CToleranceMin tol2("Ball Quality", "", 90.0, ToleranceEnum::NonRelative);
 	tolerances.push_back(&tol2);
 
-	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0, ToleranceCategory::TolCategory2D, ToleranceEnum::RelativeAny);
+	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0, ToleranceEnum::RelativeAny);
 	tolerances.push_back(&tol3);
 
 	cout << "TestRelativeMode" << endl;
