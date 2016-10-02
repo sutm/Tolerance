@@ -63,27 +63,22 @@ namespace ToleranceCategory
 	const int TolCategory2D3D = TolCategory2D | TolCategory3D;
 };
 
-namespace ToleranceEnum
+namespace RelativeMode
 {
-	enum RelativeMode
-	{
-		Relative = 1,
-		NonRelative,
-		RelativeAny,
-	};
+	const int Relative = 1;
+	const int NonRelative = 2;
+	const int RelativeAny = Relative | NonRelative;
 };
 
 // Abstract base class for tolerance
 struct CToleranceBase
 {
 	CToleranceBase(	std::string name,
-					std::string desc,
-					ToleranceEnum::RelativeMode relmode) :
+					std::string desc) :
 		m_strName(std::move(name)),
 		m_strDesc(std::move(desc)),
 		m_bEnable(false),
-		m_nPriority(0),
-		m_RelativeMode(relmode)
+		m_nPriority(0)
 	{ }
 
 	std::string GetName() const
@@ -141,8 +136,8 @@ struct CToleranceBase
 		return pTol1->m_nPriority < pTol2->m_nPriority;
 	}
 
-	bool IsRelative() const { return m_RelativeMode==ToleranceEnum::Relative || m_RelativeMode==ToleranceEnum::RelativeAny; }
-	bool IsNonRelative() const { return m_RelativeMode==ToleranceEnum::NonRelative || m_RelativeMode==ToleranceEnum::RelativeAny; }
+	virtual bool IsRelative() const = 0;
+	virtual bool IsNonRelative() const = 0;
 
 	virtual bool Is2D() const = 0;
 	virtual bool Is3D() const = 0;
@@ -156,14 +151,6 @@ protected:
 	bool m_bEnable;
 	std::string m_strResultCode;
 	int m_nPriority;
-	const ToleranceEnum::RelativeMode m_RelativeMode;
-};
-
-template<int TolCategory>
-struct TolTraits
-{
-	static const bool is_2D = (TolCategory & ToleranceCategory::TolCategory2D) != 0;
-	static const bool is_3D = (TolCategory & ToleranceCategory::TolCategory3D) != 0;
 };
 
 // template class for tolerance
@@ -174,25 +161,23 @@ struct TolTraits
 template <
 	typename T = double,
 	template<typename V> class TolCheck = DevTol,
-	int TolCategory = ToleranceCategory::TolCategory2D3D
+	int TolCategory = ToleranceCategory::TolCategory2D3D,
+	int RelMode = RelativeMode::RelativeAny
 >
 class CToleranceImpl :	public CToleranceBase, 
-						public TolCheck<T>,
-						private TolTraits<TolCategory>
+						public TolCheck<T>
 {
 public:
 	typedef T			value_type;
 	typedef TolCheck<T>	tol_check;
 
-	CToleranceImpl(	std::string name, std::string desc, T dRejectLow, T dRejectHi,
-					ToleranceEnum::RelativeMode relmode=ToleranceEnum::RelativeAny) :
-		CToleranceBase(std::move(name), std::move(desc), relmode),
+	CToleranceImpl(	std::string name, std::string desc, T dRejectLow, T dRejectHi) :
+		CToleranceBase(std::move(name), std::move(desc)),
 		TolCheck<T>(dRejectLow, dRejectHi)
 	{}
 
-	CToleranceImpl(std::string name, std::string desc, T dReject,
-					ToleranceEnum::RelativeMode relmode=ToleranceEnum::RelativeAny) :
-		CToleranceBase(std::move(name), std::move(desc), relmode),
+	CToleranceImpl(std::string name, std::string desc, T dReject) :
+		CToleranceBase(std::move(name), std::move(desc)),
 		TolCheck<T>(dReject)
 	{}
 
@@ -210,12 +195,22 @@ public:
 
 	bool Is2D() const override
 	{
-		return is_2D;
+		return (TolCategory & ToleranceCategory::TolCategory2D) != 0;
 	}
 
 	bool Is3D() const override
 	{
-		return is_3D;
+		return (TolCategory & ToleranceCategory::TolCategory3D) != 0;
+	}
+
+	bool IsRelative() const override
+	{
+		return (RelMode & RelativeMode::Relative) != 0;
+	}
+
+	bool IsNonRelative() const override
+	{
+		return (RelMode & RelativeMode::NonRelative) != 0;
 	}
 };
 

@@ -130,13 +130,13 @@ void TestRelativeMode()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDev tol1("Pad Size", "", 80.0, 100.0, ToleranceEnum::Relative);
+	CToleranceImpl<double, DevTol, ToleranceCategory::TolCategory2D, RelativeMode::Relative> tol1("Pad Size", "", 80.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMin tol2("Ball Quality", "", 90.0, ToleranceEnum::NonRelative);
+	CToleranceImpl<double, MinTol, ToleranceCategory::TolCategory2D, RelativeMode::NonRelative> tol2("Ball Quality", "", 90.0);
 	tolerances.push_back(&tol2);
 
-	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0, ToleranceEnum::RelativeAny);
+	CToleranceImpl<double, DevTol, ToleranceCategory::TolCategory2D, RelativeMode::RelativeAny> tol3("Ball Pitch", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 
 	cout << "TestRelativeMode" << endl;
