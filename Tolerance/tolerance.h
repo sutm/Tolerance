@@ -158,40 +158,21 @@ protected:
 // - T: value type of tolerance (double, int, char, string)
 // - TolCheck: tolerance checker (min, max)
 // - TolCategory: 2D, 3D tolerance
+// - RelMode: Relative, NonRelative mode
 template <
 	typename T = double,
-	template<typename V> class TolCheck = DevTol,
 	int TolCategory = ToleranceCategory::TolCategory2D3D,
 	int RelMode = RelativeMode::RelativeAny
 >
-class CToleranceImpl :	public CToleranceBase, 
-						public TolCheck<T>
+class CToleranceImpl : public CToleranceBase
 {
 public:
 	typedef T			value_type;
-	typedef TolCheck<T>	tol_check;
+	//typedef TolCheck<T>	tol_check;
 
-	CToleranceImpl(	std::string name, std::string desc, T dRejectLow, T dRejectHi) :
-		CToleranceBase(std::move(name), std::move(desc)),
-		TolCheck<T>(dRejectLow, dRejectHi)
+	CToleranceImpl(	std::string name, std::string desc) :
+		CToleranceBase(std::move(name), std::move(desc))
 	{}
-
-	CToleranceImpl(std::string name, std::string desc, T dReject) :
-		CToleranceBase(std::move(name), std::move(desc)),
-		TolCheck<T>(dReject)
-	{}
-
-	bool IsMinTol() const override
-	{
-		return (std::is_same<MinTol<T>, tol_check>::value ||
-				std::is_same<DevTol<T>, tol_check>::value);
-	}
-
-	bool IsMaxTol() const override
-	{
-		return (std::is_same<MaxTol<T>, tol_check>::value ||
-				std::is_same<DevTol<T>, tol_check>::value);
-	}
 
 	bool Is2D() const override
 	{
@@ -214,8 +195,83 @@ public:
 	}
 };
 
+template <
+	typename T = double,
+	int TolCategory = ToleranceCategory::TolCategory2D3D,
+	int RelMode = RelativeMode::RelativeAny
+>
+class CToleranceMinT :	public CToleranceImpl<T, TolCategory, RelMode>,
+						public MinTol<T>
+{
+public:
+	CToleranceMinT(	std::string name, std::string desc, T rejectLo) :
+		CToleranceImpl(std::move(name), std::move(desc)),
+		MinTol(rejectLo)
+	{}
+
+	bool IsMinTol() const override
+	{
+		return true;
+	}
+
+	bool IsMaxTol() const override
+	{
+		return false;
+	}
+};
+
+template <
+	typename T = double,
+	int TolCategory = ToleranceCategory::TolCategory2D3D,
+	int RelMode = RelativeMode::RelativeAny
+>
+class CToleranceMaxT :	public CToleranceImpl<T, TolCategory, RelMode>,
+						public MaxTol<T>
+{
+public:
+	CToleranceMaxT(	std::string name, std::string desc, T rejectHi) :
+		CToleranceImpl(std::move(name), std::move(desc)),
+		MaxTol(rejectHi)
+	{}
+
+	bool IsMinTol() const override
+	{
+		return false;
+	}
+
+	bool IsMaxTol() const override
+	{
+		return true;
+	}
+};
+
+template <
+	typename T = double,
+	int TolCategory = ToleranceCategory::TolCategory2D3D,
+	int RelMode = RelativeMode::RelativeAny
+>
+class CToleranceDevT :	public CToleranceImpl<T, TolCategory, RelMode>,
+						public DevTol<T>
+{
+public:
+	CToleranceDevT(	std::string name, std::string desc, T rejectLo, T rejectHi) :
+		CToleranceImpl(std::move(name), std::move(desc)),
+		DevTol(rejectLo, rejectHi)
+	{}
+
+	bool IsMinTol() const override
+	{
+		return true;
+	}
+
+	bool IsMaxTol() const override
+	{
+		return true;
+	}
+};
+
 // typedef for commonly used tolerance types
-typedef CToleranceImpl<>						CToleranceDev;
-typedef CToleranceImpl<double, MinTol>			CToleranceMin;
-typedef CToleranceImpl<double, MaxTol>			CToleranceMax;
-typedef CToleranceImpl<char, MaxTol>			CToleranceMaxChar;
+typedef CToleranceDevT<>			CToleranceDev;
+typedef CToleranceMinT<double>		CToleranceMin;
+typedef CToleranceMaxT<double>		CToleranceMax;
+typedef CToleranceMaxT<char>		CToleranceMaxChar;
