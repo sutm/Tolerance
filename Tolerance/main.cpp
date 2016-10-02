@@ -58,7 +58,7 @@ void TestMinMax()
 	assert(tol3.CheckTolerance(100.0));
 	assert(!tol3.CheckTolerance(100.1));
 
-	CToleranceMaxChar tol4("CToleranceMaxChar", "", 'B');
+	CToleranceMaxT<char> tol4("CToleranceMaxChar", "", 'B');
 	tolerances.push_back(&tol4);
 	assert(tol4.CheckTolerance('B'));
 	assert(!tol4.CheckTolerance('C'));
@@ -86,7 +86,7 @@ void TestEnable()
 	CToleranceMax tol3("CToleranceMax", "", 100.0);
 	tolerances.push_back(&tol3);
 
-	CToleranceMaxChar tol4("CToleranceMaxChar", "", 'B');
+	CToleranceMaxT<char> tol4("CToleranceMaxChar", "", 'B');
 	tolerances.push_back(&tol4);
 
 	tol1.SetEnabled(true);
@@ -107,13 +107,13 @@ void Test2D3DCategory()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDevT<double, ToleranceCategory::TolCategory2D3D>  tol1("Ball Height", "", 5.0, 100.0);
+	CToleranceDevT<double, EToleranceCategory::Tol2D3D>  tol1("Ball Height", "", 5.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMaxT<double, ToleranceCategory::TolCategory3D> tol2("Warpage", "", 5.0);
+	CToleranceMaxT<double, EToleranceCategory::Tol3D> tol2("Warpage", "", 5.0);
 	tolerances.push_back(&tol2);
 
-	CToleranceDevT<double, ToleranceCategory::TolCategory2D> tol3("Ball Pitch", "", 80.0, 100.0);
+	CToleranceDevT<double, EToleranceCategory::Tol2D> tol3("Ball Pitch", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 
 	cout << "Test2D3DCategory" << endl;
@@ -130,13 +130,13 @@ void TestRelativeMode()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDevT<double, ToleranceCategory::TolCategory2D, RelativeMode::Relative> tol1("Pad Size", "", 80.0, 100.0);
+	CToleranceDevT<double, EToleranceCategory::Tol2D, ERelativeMode::Relative> tol1("Pad Size", "", 80.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMinT<double, ToleranceCategory::TolCategory2D, RelativeMode::NonRelative> tol2("Ball Quality", "", 90.0);
+	CToleranceMinT<double, EToleranceCategory::Tol2D, ERelativeMode::NonRelative> tol2("Ball Quality", "", 90.0);
 	tolerances.push_back(&tol2);
 
-	CToleranceDevT<double, ToleranceCategory::TolCategory2D, RelativeMode::RelativeAny> tol3("Ball Pitch", "", 80.0, 100.0);
+	CToleranceDevT<double, EToleranceCategory::Tol2D, ERelativeMode::Any> tol3("Ball Pitch", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 
 	cout << "TestRelativeMode" << endl;

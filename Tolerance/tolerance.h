@@ -56,18 +56,18 @@ public:
 	}
 };
 
-namespace ToleranceCategory
+namespace EToleranceCategory
 {
-	const int TolCategory2D = 1;
-	const int TolCategory3D = 2;
-	const int TolCategory2D3D = TolCategory2D | TolCategory3D;
+	const int Tol2D = 1;
+	const int Tol3D = 2;
+	const int Tol2D3D = Tol2D | Tol3D;
 };
 
-namespace RelativeMode
+namespace ERelativeMode
 {
 	const int Relative = 1;
 	const int NonRelative = 2;
-	const int RelativeAny = Relative | NonRelative;
+	const int Any = Relative | NonRelative;
 };
 
 // Abstract base class for tolerance
@@ -161,14 +161,12 @@ protected:
 // - RelMode: Relative, NonRelative mode
 template <
 	typename T = double,
-	int TolCategory = ToleranceCategory::TolCategory2D3D,
-	int RelMode = RelativeMode::RelativeAny
+	int TolCategory = EToleranceCategory::Tol2D3D,
+	int RelMode = ERelativeMode::Any
 >
 class CToleranceImpl : public CToleranceBase
 {
 public:
-	typedef T			value_type;
-	//typedef TolCheck<T>	tol_check;
 
 	CToleranceImpl(	std::string name, std::string desc) :
 		CToleranceBase(std::move(name), std::move(desc))
@@ -176,29 +174,29 @@ public:
 
 	bool Is2D() const override
 	{
-		return (TolCategory & ToleranceCategory::TolCategory2D) != 0;
+		return (TolCategory & EToleranceCategory::Tol2D) != 0;
 	}
 
 	bool Is3D() const override
 	{
-		return (TolCategory & ToleranceCategory::TolCategory3D) != 0;
+		return (TolCategory & EToleranceCategory::Tol3D) != 0;
 	}
 
 	bool IsRelative() const override
 	{
-		return (RelMode & RelativeMode::Relative) != 0;
+		return (RelMode & ERelativeMode::Relative) != 0;
 	}
 
 	bool IsNonRelative() const override
 	{
-		return (RelMode & RelativeMode::NonRelative) != 0;
+		return (RelMode & ERelativeMode::NonRelative) != 0;
 	}
 };
 
 template <
 	typename T = double,
-	int TolCategory = ToleranceCategory::TolCategory2D3D,
-	int RelMode = RelativeMode::RelativeAny
+	int TolCategory = EToleranceCategory::Tol2D3D,
+	int RelMode = ERelativeMode::Any
 >
 class CToleranceMinT :	public CToleranceImpl<T, TolCategory, RelMode>,
 						public MinTol<T>
@@ -222,8 +220,8 @@ public:
 
 template <
 	typename T = double,
-	int TolCategory = ToleranceCategory::TolCategory2D3D,
-	int RelMode = RelativeMode::RelativeAny
+	int TolCategory = EToleranceCategory::Tol2D3D,
+	int RelMode = ERelativeMode::Any
 >
 class CToleranceMaxT :	public CToleranceImpl<T, TolCategory, RelMode>,
 						public MaxTol<T>
@@ -247,8 +245,8 @@ public:
 
 template <
 	typename T = double,
-	int TolCategory = ToleranceCategory::TolCategory2D3D,
-	int RelMode = RelativeMode::RelativeAny
+	int TolCategory = EToleranceCategory::Tol2D3D,
+	int RelMode = ERelativeMode::Any
 >
 class CToleranceDevT :	public CToleranceImpl<T, TolCategory, RelMode>,
 						public DevTol<T>
@@ -274,4 +272,3 @@ public:
 typedef CToleranceDevT<>			CToleranceDev;
 typedef CToleranceMinT<double>		CToleranceMin;
 typedef CToleranceMaxT<double>		CToleranceMax;
-typedef CToleranceMaxT<char>		CToleranceMaxChar;
