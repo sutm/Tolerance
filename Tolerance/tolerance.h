@@ -56,20 +56,6 @@ public:
 	}
 };
 
-namespace EToleranceCategory
-{
-	const int Tol2D = 1;
-	const int Tol3D = 2;
-	const int Tol2D3D = Tol2D | Tol3D;
-};
-
-namespace ERelativeMode
-{
-	const int Relative = 1;
-	const int NonRelative = 2;
-	const int Any = Relative | NonRelative;
-};
-
 // Abstract base class for tolerance
 struct CToleranceBase
 {
@@ -160,9 +146,7 @@ protected:
 // - TolCategory: 2D, 3D tolerance
 // - RelMode: Relative, NonRelative mode
 template <
-	typename T = double,
-	int TolCategory = EToleranceCategory::Tol2D3D,
-	int RelMode = ERelativeMode::Any
+	typename T = double
 >
 class CToleranceImpl : public CToleranceBase
 {
@@ -174,31 +158,29 @@ public:
 
 	bool Is2D() const override
 	{
-		return (TolCategory & EToleranceCategory::Tol2D) != 0;
+		return true;
 	}
 
 	bool Is3D() const override
 	{
-		return (TolCategory & EToleranceCategory::Tol3D) != 0;
+		return true;
 	}
 
 	bool IsRelative() const override
 	{
-		return (RelMode & ERelativeMode::Relative) != 0;
+		return true;
 	}
 
 	bool IsNonRelative() const override
 	{
-		return (RelMode & ERelativeMode::NonRelative) != 0;
+		return true;
 	}
 };
 
 template <
-	typename T = double,
-	int TolCategory = EToleranceCategory::Tol2D3D,
-	int RelMode = ERelativeMode::Any
+	typename T = double
 >
-class CToleranceMinT :	public CToleranceImpl<T, TolCategory, RelMode>,
+class CToleranceMinT :	public CToleranceImpl<T>,
 						public MinTol<T>
 {
 public:
@@ -219,11 +201,9 @@ public:
 };
 
 template <
-	typename T = double,
-	int TolCategory = EToleranceCategory::Tol2D3D,
-	int RelMode = ERelativeMode::Any
+	typename T = double
 >
-class CToleranceMaxT :	public CToleranceImpl<T, TolCategory, RelMode>,
+class CToleranceMaxT :	public CToleranceImpl<T>,
 						public MaxTol<T>
 {
 public:
@@ -244,11 +224,9 @@ public:
 };
 
 template <
-	typename T = double,
-	int TolCategory = EToleranceCategory::Tol2D3D,
-	int RelMode = ERelativeMode::Any
+	typename T = double
 >
-class CToleranceDevT :	public CToleranceImpl<T, TolCategory, RelMode>,
+class CToleranceDevT :	public CToleranceImpl<T>,
 						public DevTol<T>
 {
 public:
@@ -272,3 +250,24 @@ public:
 typedef CToleranceDevT<>			CToleranceDev;
 typedef CToleranceMinT<double>		CToleranceMin;
 typedef CToleranceMaxT<double>		CToleranceMax;
+
+struct ToleranceProperties
+{
+	enum ECategory
+	{
+		Tol2D = 1,
+		Tol3D,
+		Tol2D3D
+	};
+
+	enum EMode
+	{
+		Relative = 1,
+		RelativeNot,
+		RelativeAny
+	};
+
+	std::string m_strTolName;
+	ECategory m_category;
+	EMode m_relativeMode;
+};

@@ -7,6 +7,7 @@
 #include <functional>
 #include <iterator>
 #include <vector>
+#include <map>
 #include <array>
 #include <tuple>
 #include <iostream>
@@ -24,17 +25,28 @@ enum INSP_RESULT_ID
 	INSP_FAIL_BALL_PITCH,
 	INSP_FAIL_BALL_QUALITY,
 	INSP_FAIL_WARPAGE,
-	INSP_FAIL_PAD_SIZE,
-	INSP_FAIL_COUNT
+	INSP_FAIL_PAD_SIZE
 };
 
-static const array<Result, INSP_FAIL_COUNT> g_results = {{
+const int INSP_TOL_COUNT = 6;
+static const array<Result, INSP_TOL_COUNT> g_results = 
+{{
 	{"Ball Height",		INSP_FAIL_BALL_HEIGHT	},
 	{"Coplan",			INSP_FAIL_BALL_COPLAN	},
 	{"Ball Pitch",		INSP_FAIL_BALL_PITCH	},
 	{"Ball Quality",	INSP_FAIL_BALL_QUALITY	},
 	{"Warpage",			INSP_FAIL_WARPAGE		},
 	{"Pad Size",		INSP_FAIL_PAD_SIZE		}
+}};
+
+static const array<ToleranceProperties, INSP_TOL_COUNT> g_tolproperties = 
+{{
+	{"Ball Height",		ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny	},
+	{"Coplan",			ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot	},
+	{"Ball Pitch",		ToleranceProperties::Tol2D,		ToleranceProperties::RelativeAny	},
+	{"Ball Quality",	ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNot	},
+	{"Warpage",			ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot	},
+	{"Pad Size",		ToleranceProperties::Tol2D,		ToleranceProperties::Relative		}
 }};
 
 void TestMinMax()
@@ -107,22 +119,28 @@ void Test2D3DCategory()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDevT<double, EToleranceCategory::Tol2D3D>  tol1("Ball Height", "", 5.0, 100.0);
+	CToleranceDevT<double>  tol1("Ball Height", "", 5.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMaxT<double, EToleranceCategory::Tol3D> tol2("Warpage", "", 5.0);
+	CToleranceMaxT<double> tol2("Warpage", "", 5.0);
 	tolerances.push_back(&tol2);
 
-	CToleranceDevT<double, EToleranceCategory::Tol2D> tol3("Ball Pitch", "", 80.0, 100.0);
+	CToleranceDevT<double> tol3("Ball Pitch", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 
 	cout << "Test2D3DCategory" << endl;
 	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
 	{
 		auto tol = *itr;
-		cout << left << setw(20) << tol->GetName() << ": " <<
-			"2D=" << boolalpha << setw(5) << tol->Is2D() << ", " <<
-			"3D=" << boolalpha << setw(5) << tol->Is3D() << endl;
+		auto strName = tol->GetName();
+		auto tolprop = find_if(g_tolproperties.begin(), g_tolproperties.end(), [strName](const ToleranceProperties& prop)
+		{
+			return prop.m_strTolName == strName; 
+		});
+		
+		cout << left << setw(20) << tolprop->m_strTolName << ": " <<
+			"2D=" << boolalpha << setw(5) << tolprop->m_category << ", " <<
+			"3D=" << boolalpha << setw(5) << tolprop->m_category << endl;
 	}
 }
 
@@ -130,13 +148,13 @@ void TestRelativeMode()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDevT<double, EToleranceCategory::Tol2D, ERelativeMode::Relative> tol1("Pad Size", "", 80.0, 100.0);
+	CToleranceDevT<double> tol1("Pad Size", "", 80.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMinT<double, EToleranceCategory::Tol2D, ERelativeMode::NonRelative> tol2("Ball Quality", "", 90.0);
+	CToleranceMinT<double> tol2("Ball Quality", "", 90.0);
 	tolerances.push_back(&tol2);
 
-	CToleranceDevT<double, EToleranceCategory::Tol2D, ERelativeMode::Any> tol3("Ball Pitch", "", 80.0, 100.0);
+	CToleranceDevT<double> tol3("Ball Pitch", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 
 	cout << "TestRelativeMode" << endl;
@@ -151,7 +169,7 @@ void TestRelativeMode()
 
 void TestFailResult()
 {
-	CModuleResult<INSP_FAIL_COUNT> moduleResult(g_results);
+	CModuleResult<INSP_TOL_COUNT> moduleResult(g_results);
 
 	CToleranceDev tol1("Pad Size", "", 80.0, 100.0);
 	tol1.SetPriority(0);
