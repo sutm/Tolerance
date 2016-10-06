@@ -122,12 +122,6 @@ struct CToleranceBase
 		return pTol1->m_nPriority < pTol2->m_nPriority;
 	}
 
-	virtual bool IsRelative() const = 0;
-	virtual bool IsNonRelative() const = 0;
-
-	virtual bool Is2D() const = 0;
-	virtual bool Is3D() const = 0;
-
 	virtual bool IsMinTol() const = 0;
 	virtual bool IsMaxTol() const = 0;
 	
@@ -155,26 +149,6 @@ public:
 	CToleranceImpl(	std::string name, std::string desc) :
 		CToleranceBase(std::move(name), std::move(desc))
 	{}
-
-	bool Is2D() const override
-	{
-		return true;
-	}
-
-	bool Is3D() const override
-	{
-		return true;
-	}
-
-	bool IsRelative() const override
-	{
-		return true;
-	}
-
-	bool IsNonRelative() const override
-	{
-		return true;
-	}
 };
 
 template <
@@ -267,7 +241,27 @@ struct ToleranceProperties
 		RelativeAny
 	};
 
-	std::string m_strTolName;
 	ECategory m_category;
 	EMode m_relativeMode;
+
+	static bool Is2D(const ToleranceProperties& p)
+	{
+		return (p.m_category & Tol2D) != 0;
+	}
+
+	static bool Is3D(const ToleranceProperties& p)
+	{
+		return (p.m_category & Tol3D) != 0;
+	}
+
+	static bool IsRelative(const ToleranceProperties& p)
+	{
+		return (p.m_relativeMode & Relative) != 0;
+	}
+
+	static bool IsNonRelative(const ToleranceProperties& p)
+	{
+		return (p.m_relativeMode & RelativeNot) != 0;
+	}
+
 };

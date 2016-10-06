@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include <assert.h>
 #include <type_traits>
+#include <utility>
 #include <algorithm>
 #include <functional>
 #include <iterator>
@@ -39,15 +40,36 @@ static const array<Result, INSP_TOL_COUNT> g_results =
 	{"Pad Size",		INSP_FAIL_PAD_SIZE		}
 }};
 
-static const array<ToleranceProperties, INSP_TOL_COUNT> g_tolproperties = 
-{{
-	{"Ball Height",		ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny	},
-	{"Coplan",			ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot	},
-	{"Ball Pitch",		ToleranceProperties::Tol2D,		ToleranceProperties::RelativeAny	},
-	{"Ball Quality",	ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNot	},
-	{"Warpage",			ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot	},
-	{"Pad Size",		ToleranceProperties::Tol2D,		ToleranceProperties::Relative		}
-}};
+#if _MSC_VER >= 1700
+static const map<string, ToleranceProperties> g_tolproperties = 
+{
+	("Ball Height",		{ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny}	),
+	("Coplan",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNot}	),
+	("Ball Pitch",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeAny}	),
+	("Ball Quality",	{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNot}	),
+	("Warpage",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNot}	),
+	("Pad Size",		{ToleranceProperties::Tol2D,	ToleranceProperties::Relative	}	)
+};
+#else
+
+ToleranceProperties make_tolerance_prop(ToleranceProperties::ECategory category, ToleranceProperties::EMode relativeMode)
+{
+	ToleranceProperties tolprop = {category, relativeMode};
+	return tolprop;
+}
+
+pair<string, ToleranceProperties> _tolproperties[] = 
+{
+	make_pair<string, ToleranceProperties>("Ball Height",	make_tolerance_prop(ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny)	),
+	make_pair<string, ToleranceProperties>("Coplan",		make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot)	),
+	make_pair<string, ToleranceProperties>("Ball Pitch",	make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeAny)	),
+	make_pair<string, ToleranceProperties>("Ball Quality",	make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNot)	),
+	make_pair<string, ToleranceProperties>("Warpage",		make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot)	),
+	make_pair<string, ToleranceProperties>("Pad Size",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::Relative)	)
+};
+
+static const map<string, ToleranceProperties> g_tolproperties(begin(_tolproperties), end(_tolproperties));
+#endif
 
 void TestMinMax()
 {
@@ -133,14 +155,10 @@ void Test2D3DCategory()
 	{
 		auto tol = *itr;
 		auto strName = tol->GetName();
-		auto tolprop = find_if(g_tolproperties.begin(), g_tolproperties.end(), [strName](const ToleranceProperties& prop)
-		{
-			return prop.m_strTolName == strName; 
-		});
-		
-		cout << left << setw(20) << tolprop->m_strTolName << ": " <<
-			"2D=" << boolalpha << setw(5) << tolprop->m_category << ", " <<
-			"3D=" << boolalpha << setw(5) << tolprop->m_category << endl;
+		const auto& tolprop = g_tolproperties.at(strName);
+		cout << left << setw(20) << strName << ": " <<
+			"2D=" << boolalpha << setw(5) << ToleranceProperties::Is2D(tolprop) << ", " <<
+			"3D=" << boolalpha << setw(5) << ToleranceProperties::Is3D(tolprop) << endl;
 	}
 }
 
@@ -161,9 +179,11 @@ void TestRelativeMode()
 	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
 	{
 		auto tol = *itr;
-		cout << left << setw(20) << tol->GetName() << ": " <<
-			"Relative=" << boolalpha << setw(5) << tol->IsRelative() << ", " <<
-			"NonRelative=" << boolalpha << setw(5) << tol->IsNonRelative() << endl;
+		auto strName = tol->GetName();
+		const auto& tolprop = g_tolproperties.at(strName);
+		cout << left << setw(20) << strName << ": " <<
+			"Relative=" << boolalpha << setw(5) << ToleranceProperties::IsRelative(tolprop) << ", " <<
+			"NonRelative=" << boolalpha << setw(5) << ToleranceProperties::IsNonRelative(tolprop) << endl;
 	}
 }
 
