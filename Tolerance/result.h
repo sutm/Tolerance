@@ -6,19 +6,12 @@
 #include <functional>
 #include <map>
 
-struct Result
-{
-	std::string m_strTolName;
-	int m_nResultId;
-};
-
 struct CToleranceBase;
 
-template<int RESULT_COUNT>
 class CModuleResult
 {
 public:
-	CModuleResult(const std::array<Result, RESULT_COUNT>& resultIds) :
+	CModuleResult(const std::map<std::string, INSP_RESULT_ID>& resultIds) :
 		m_ResultIds(resultIds)
 	{ }
 
@@ -32,15 +25,14 @@ public:
 	}
 
 	// returns Result and Description of the first failed tolerance
-	std::pair<Result, std::string> GetFirstFailResult()
+	std::tuple<std::string, INSP_RESULT_ID, std::string> GetFirstFailResult()
 	{
 		if (m_FailTolerances.empty())
-			return make_pair<Result, std::string>(Result(), "");
+			return std::make_tuple("", INSP_PASS, "");
 
 		std::nth_element(m_FailTolerances.begin(), m_FailTolerances.begin(), m_FailTolerances.end(), CToleranceBase::tolerance_by_priority);
 		auto strName = m_FailTolerances.front()->GetName();
-		Result res = { strName, GetResultIdByTolName(strName) };
-		return std::make_pair(res, m_ResultDescs[strName]);
+		return std::make_tuple(strName, GetResultIdByTolName(strName), m_ResultDescs[strName]);
 	}
 
 	std::vector<int> GetFailResultIds()
@@ -60,16 +52,12 @@ public:
 	}
 
 private:
-	int GetResultIdByTolName(const std::string& strName) const
+	INSP_RESULT_ID GetResultIdByTolName(const std::string& strName) const
 	{
-		auto itr = std::find_if(m_ResultIds.begin(), m_ResultIds.end(), [strName](const Result& result)
-		{
-			return result.m_strTolName == strName;
-		});
-		return itr->m_nResultId;
+		return m_ResultIds.at(strName);
 	}
 
-	const std::array<Result, RESULT_COUNT>& m_ResultIds;
+	const std::map<std::string, INSP_RESULT_ID>& m_ResultIds;
 	std::vector<CToleranceBase*> m_FailTolerances;
 	//typedef decltype(CToleranceBase::GetName()) tol_name;
 	std::map<std::string, std::string> m_ResultDescs;

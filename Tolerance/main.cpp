@@ -18,57 +18,72 @@
 
 using namespace std;
 
-enum INSP_RESULT_ID
+#if _MSC_VER < 1700
+map<string, ToleranceProperties> make_tolerance_properties()
 {
-	INSP_PASS=0,
-	INSP_FAIL_BALL_HEIGHT,
-	INSP_FAIL_BALL_COPLAN,
-	INSP_FAIL_BALL_PITCH,
-	INSP_FAIL_BALL_QUALITY,
-	INSP_FAIL_WARPAGE,
-	INSP_FAIL_PAD_SIZE
-};
+	auto make_tolerance_prop = [](	ToleranceProperties::ECategory category, 
+									ToleranceProperties::EMode relativeMode) 
+									-> ToleranceProperties
+	{
+		ToleranceProperties tolprop = {category, relativeMode};
+		return tolprop;
+	};
 
-const int INSP_TOL_COUNT = 6;
-static const array<Result, INSP_TOL_COUNT> g_results = 
-{{
+	pair<string, ToleranceProperties> _tolproperties[] =
+	{
+		make_pair("Ball Height",	make_tolerance_prop(ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny)),
+		make_pair("Coplan",			make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot)),
+		make_pair("Ball Pitch",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeAny)),
+		make_pair("Ball Quality",	make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNot)),
+		make_pair("Warpage",		make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot)),
+		make_pair("Pad Size",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::Relative))
+	};
+
+	return map<string, ToleranceProperties>(begin(_tolproperties), end(_tolproperties));
+}
+
+map<string, INSP_RESULT_ID> make_result_ids()
+{
+	pair<string, INSP_RESULT_ID> _resultIds[] =
+	{
+		make_pair("Ball Height",	INSP_FAIL_BALL_HEIGHT),
+		make_pair("Coplan",			INSP_FAIL_BALL_COPLAN),
+		make_pair("Ball Pitch",		INSP_FAIL_BALL_PITCH),
+		make_pair("Ball Quality",	INSP_FAIL_BALL_QUALITY),
+		make_pair("Warpage",		INSP_FAIL_WARPAGE),
+		make_pair("Pad Size",		INSP_FAIL_PAD_SIZE)
+	};
+
+	return map<string, INSP_RESULT_ID>(begin(_resultIds), end(_resultIds));
+}
+#endif
+
+static const map<string, INSP_RESULT_ID> g_resultIds =
+#if _MSC_VER < 1700
+	make_result_ids();
+#else
+{
 	{"Ball Height",		INSP_FAIL_BALL_HEIGHT	},
 	{"Coplan",			INSP_FAIL_BALL_COPLAN	},
 	{"Ball Pitch",		INSP_FAIL_BALL_PITCH	},
 	{"Ball Quality",	INSP_FAIL_BALL_QUALITY	},
 	{"Warpage",			INSP_FAIL_WARPAGE		},
 	{"Pad Size",		INSP_FAIL_PAD_SIZE		}
-}};
+};
+#endif
 
-#if _MSC_VER >= 1700
 static const map<string, ToleranceProperties> g_tolproperties = 
-{
-	("Ball Height",		{ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny}	),
-	("Coplan",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNot}	),
-	("Ball Pitch",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeAny}	),
-	("Ball Quality",	{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNot}	),
-	("Warpage",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNot}	),
-	("Pad Size",		{ToleranceProperties::Tol2D,	ToleranceProperties::Relative	}	)
-};
+#if _MSC_VER < 1700
+	make_tolerance_properties();
 #else
-
-ToleranceProperties make_tolerance_prop(ToleranceProperties::ECategory category, ToleranceProperties::EMode relativeMode)
 {
-	ToleranceProperties tolprop = {category, relativeMode};
-	return tolprop;
-}
-
-pair<string, ToleranceProperties> _tolproperties[] = 
-{
-	make_pair<string, ToleranceProperties>("Ball Height",	make_tolerance_prop(ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny)	),
-	make_pair<string, ToleranceProperties>("Coplan",		make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot)	),
-	make_pair<string, ToleranceProperties>("Ball Pitch",	make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeAny)	),
-	make_pair<string, ToleranceProperties>("Ball Quality",	make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNot)	),
-	make_pair<string, ToleranceProperties>("Warpage",		make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot)	),
-	make_pair<string, ToleranceProperties>("Pad Size",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::Relative)	)
+	{"Ball Height",		{ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny}	},
+	{"Coplan",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNot}	},
+	{"Ball Pitch",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeAny}	},
+	{"Ball Quality",	{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNot}	},
+	{"Warpage",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNot}	},
+	{"Pad Size",		{ToleranceProperties::Tol2D,	ToleranceProperties::Relative	}	}
 };
-
-static const map<string, ToleranceProperties> g_tolproperties(begin(_tolproperties), end(_tolproperties));
 #endif
 
 void TestMinMax()
@@ -189,7 +204,7 @@ void TestRelativeMode()
 
 void TestFailResult()
 {
-	CModuleResult<INSP_TOL_COUNT> moduleResult(g_results);
+	CModuleResult moduleResult(g_resultIds);
 
 	CToleranceDev tol1("Pad Size", "", 80.0, 100.0);
 	tol1.SetPriority(0);
@@ -204,10 +219,11 @@ void TestFailResult()
 	moduleResult.AddFailResult(&tol3, "Ball Pitch: 101 (80.0, 100), Fail");
 		
 	cout << "TestFailResult" << endl;
-	Result result;
-	string strResultDesc;
-	tie(result, strResultDesc) = moduleResult.GetFirstFailResult();
-	cout << left << setw(20) << result.m_strTolName << ": " << result.m_nResultId << ", " << strResultDesc << endl;
+	INSP_RESULT_ID resultId;
+	string resultName, resultDesc;
+	tie(resultName, resultId, resultDesc) = moduleResult.GetFirstFailResult();
+
+	cout << left << setw(20) << resultName << ": " << resultId << ", " << resultDesc << endl;
 
 	auto resultIds = moduleResult.GetFailResultIds();
 	for (auto itr = resultIds.begin(); itr != resultIds.end(); ++itr)

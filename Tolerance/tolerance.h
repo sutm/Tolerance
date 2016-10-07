@@ -1,7 +1,9 @@
 #pragma once
 
 #include <string>
+#include <map>
 #include <type_traits>
+#include "defines.h"
 
 // Tolerance Checkers can be one of the following:
 // - DevTol: check both min and max limits (default)
@@ -263,5 +265,4 @@ struct ToleranceProperties
 	{
 		return (p.m_relativeMode & RelativeNot) != 0;
 	}
-
 };
