@@ -21,22 +21,25 @@ using namespace std;
 #if _MSC_VER < 1700
 map<string, ToleranceProperties> make_tolerance_properties()
 {
-	auto make_tolerance_prop = [](	ToleranceProperties::ECategory category, 
-									ToleranceProperties::EMode relativeMode) 
+	auto make_tolerance_prop = [](	ToleranceProperties::ETolCategory tolCategory, 
+									ToleranceProperties::ERelativeMode relativeMode,
+									ToleranceProperties::ERejectType rejectType) 
 									-> ToleranceProperties
 	{
-		ToleranceProperties tolprop = {category, relativeMode};
+		ToleranceProperties tolprop = {tolCategory, relativeMode};
 		return tolprop;
 	};
 
 	pair<string, ToleranceProperties> _tolproperties[] =
 	{
-		make_pair("Ball Height",	make_tolerance_prop(ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny)),
-		make_pair("Coplan",			make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot)),
-		make_pair("Ball Pitch",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeAny)),
-		make_pair("Ball Quality",	make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNot)),
-		make_pair("Warpage",		make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot)),
-		make_pair("Pad Size",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::Relative))
+		make_pair("Ball Height",	make_tolerance_prop(ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny,	ToleranceProperties::RT_Measure)),
+		make_pair("Coplan",			make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Measure)),
+		make_pair("Ball Pitch",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeAny,	ToleranceProperties::RT_Measure)),
+		make_pair("Ball Quality",	make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Measure)),
+		make_pair("Warpage",		make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Measure)),
+		make_pair("Pad Size",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::Relative,		ToleranceProperties::RT_Measure)),
+		make_pair("Datamatrix",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Text)),
+		make_pair("PVI",			make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNot,	ToleranceProperties::RT_PVI))
 	};
 
 	return map<string, ToleranceProperties>(begin(_tolproperties), end(_tolproperties));
@@ -77,12 +80,14 @@ static const map<string, ToleranceProperties> g_tolproperties =
 	make_tolerance_properties();
 #else
 {
-	{"Ball Height",		{ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny}	},
-	{"Coplan",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNot}	},
-	{"Ball Pitch",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeAny}	},
-	{"Ball Quality",	{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNot}	},
-	{"Warpage",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNot}	},
-	{"Pad Size",		{ToleranceProperties::Tol2D,	ToleranceProperties::Relative	}	}
+	{"Ball Height",		{ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny,	ToleranceProperties::RT_Measure}	},
+	{"Coplan",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Measure}	},
+	{"Ball Pitch",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeAny,	ToleranceProperties::RT_Measure}	},
+	{"Ball Quality",	{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Measure}	},
+	{"Warpage",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Measure}	},
+	{"Pad Size",		{ToleranceProperties::Tol2D,	ToleranceProperties::Relative	,	ToleranceProperties::RT_Measure}	},
+	{"Datamatrix",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Text}		},
+	{"PVI",				{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNot,	ToleranceProperties::RT_PVI}		}
 };
 #endif
 
@@ -112,7 +117,7 @@ void TestMinMax()
 	assert(tol4.CheckTolerance('B'));
 	assert(!tol4.CheckTolerance('C'));
 
-	cout << "TestMinMax" << endl;
+	cout << "\nTestMinMax\n";
 	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
 	{
 		auto tol = *itr;
@@ -144,7 +149,7 @@ void TestEnable()
 	vector<CToleranceBase*> enabled_tolerances;
 	copy_if(tolerances.begin(), tolerances.end(), back_inserter(enabled_tolerances), CToleranceBase::enabled_tolerance);
 	
-	cout << "TestEnable" << endl;
+	cout << "\nTestEnable\n";
 	for (auto itr = enabled_tolerances.begin(); itr != enabled_tolerances.end(); ++itr)
 	{
 		auto tol = *itr;
@@ -165,7 +170,7 @@ void Test2D3DCategory()
 	CToleranceDevT<double> tol3("Ball Pitch", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 
-	cout << "Test2D3DCategory" << endl;
+	cout << "\nTest2D3DCategory\n";
 	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
 	{
 		auto tol = *itr;
@@ -190,7 +195,7 @@ void TestRelativeMode()
 	CToleranceDevT<double> tol3("Ball Pitch", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 
-	cout << "TestRelativeMode" << endl;
+	cout << "\nTestRelativeMode\n";
 	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
 	{
 		auto tol = *itr;
@@ -218,7 +223,7 @@ void TestFailResult()
 	tol3.SetPriority(2);
 	moduleResult.AddFailResult(&tol3, "Ball Pitch: 101 (80.0, 100), Fail");
 		
-	cout << "TestFailResult" << endl;
+	cout << "\nTestFailResult\n";
 	INSP_RESULT_ID resultId;
 	string resultName, resultDesc;
 	tie(resultName, resultId, resultDesc) = moduleResult.GetFirstFailResult();
@@ -230,6 +235,22 @@ void TestFailResult()
 		cout << left << setw(20) << "Fail Tolerance Id: " << *itr << endl;
 }
 
+void TestRejectType()
+{
+	CToleranceDev tol1("Pad Size", "", 80.0, 100.0);
+	tol1.SetPriority(0);
+	
+	CToleranceMin tol2("Datamatrix", "", 90.0);
+	tol2.SetPriority(1);
+	
+	CToleranceDev tol3("PVI", "", 80.0, 100.0);
+	tol3.SetPriority(2);
+	
+	cout << "\nTestRejectType\n";
+	
+	//cout << left << setw(20) << resultName << ": " << resultId << ", " << resultDesc << endl;
+}
+
 int main()
 {
 	TestMinMax();
@@ -237,5 +258,6 @@ int main()
 	Test2D3DCategory();
 	TestRelativeMode();
 	TestFailResult();
+	TestRejectType();
 	return 0;
 }

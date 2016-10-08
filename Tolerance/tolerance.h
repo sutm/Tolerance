@@ -94,16 +94,6 @@ struct CToleranceBase
 		m_bEnable = bEnable;
 	}
 
-	std::string GetResultCode() const
-	{
-		return m_strResultCode;
-	}
-
-	void SetResultCode(const std::string& resultCode)
-	{
-		m_strResultCode = resultCode;
-	}
-
 	void SetPriority(int nPriority)
 	{
 		m_nPriority = nPriority;
@@ -126,12 +116,11 @@ struct CToleranceBase
 
 	virtual bool IsMinTol() const = 0;
 	virtual bool IsMaxTol() const = 0;
-	
+
 protected:
 	const std::string m_strName;
 	std::string m_strDesc;
 	bool m_bEnable;
-	std::string m_strResultCode;
 	int m_nPriority;
 };
 
@@ -151,6 +140,7 @@ public:
 	CToleranceImpl(	std::string name, std::string desc) :
 		CToleranceBase(std::move(name), std::move(desc))
 	{}
+
 };
 
 template <
@@ -229,40 +219,48 @@ typedef CToleranceMaxT<double>		CToleranceMax;
 
 struct ToleranceProperties
 {
-	enum ECategory
+	enum ETolCategory
 	{
 		Tol2D = 1,
 		Tol3D,
 		Tol2D3D
 	};
+	ETolCategory m_TolCategory;
 
-	enum EMode
+	enum ERelativeMode
 	{
 		Relative = 1,
 		RelativeNot,
 		RelativeAny
 	};
+	ERelativeMode m_RelativeMode;
 
-	ECategory m_category;
-	EMode m_relativeMode;
+	enum ERejectType
+	{
+		RT_Measure = 1,		// Measurement results	eg. ball pitch, ball height
+		RT_Text,			// Text results			eg. Datamatrix, OCR
+		RT_Error,			// Error results		eg. Missing ball, Location Error
+		RT_PVI				// PVI-like results which contain width, length, area	eg. PVI, Postseal defects
+	};
+	ERejectType m_RejectType;
 
 	static bool Is2D(const ToleranceProperties& p)
 	{
-		return (p.m_category & Tol2D) != 0;
+		return (p.m_TolCategory & Tol2D) != 0;
 	}
 
 	static bool Is3D(const ToleranceProperties& p)
 	{
-		return (p.m_category & Tol3D) != 0;
+		return (p.m_TolCategory & Tol3D) != 0;
 	}
 
 	static bool IsRelative(const ToleranceProperties& p)
 	{
-		return (p.m_relativeMode & Relative) != 0;
+		return (p.m_RelativeMode & Relative) != 0;
 	}
 
 	static bool IsNonRelative(const ToleranceProperties& p)
 	{
-		return (p.m_relativeMode & RelativeNot) != 0;
+		return (p.m_RelativeMode & RelativeNot) != 0;
 	}
 };
