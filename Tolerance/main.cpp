@@ -123,7 +123,8 @@ void TestMinMax()
 		auto tol = *itr;
 		cout << left << setw(20) << tol->GetName() << ": " <<
 			"MinTol=" << boolalpha << setw(5) << tol->IsMinTol() << ", " <<
-			"MaxTol=" << boolalpha << setw(5) << tol->IsMaxTol() << endl;
+			"MaxTol=" << boolalpha << setw(5) << tol->IsMaxTol() << ", " <<
+			"DevTol=" << boolalpha << setw(5) << tol->IsDevTol() << endl;
 	}
 }
 

@@ -25,6 +25,9 @@ public:
 		return !(value < m_dRejectLo || value > m_dRejectHi);
 	}
 
+	static const bool min_value = true;
+	static const bool max_value = true;
+
 protected:
 	T m_dRejectLo;
 	T m_dRejectHi;
@@ -42,6 +45,10 @@ public:
 	{
 		return !(value < m_dRejectLo);
 	}
+
+	static const bool min_value = true;
+	static const bool max_value = false;
+
 };
 
 template<typename T>
@@ -56,6 +63,10 @@ public:
 	{
 		return !(value > m_dRejectHi);
 	}
+
+	static const bool min_value = false;
+	static const bool max_value = true;
+
 };
 
 // Abstract base class for tolerance
@@ -114,6 +125,7 @@ struct CToleranceBase
 		return pTol1->m_nPriority < pTol2->m_nPriority;
 	}
 
+	bool IsDevTol() const { return IsMinTol() && IsMaxTol(); }
 	virtual bool IsMinTol() const = 0;
 	virtual bool IsMaxTol() const = 0;
 
@@ -128,89 +140,74 @@ protected:
 // parameterized by the following:
 // - T: value type of tolerance (double, int, char, string)
 // - TolCheck: tolerance checker (min, max)
-// - TolCategory: 2D, 3D tolerance
-// - RelMode: Relative, NonRelative mode
 template <
-	typename T = double
+	typename T = double,
+	template <typename U> class TolCheck = DevTol
 >
-class CToleranceImpl : public CToleranceBase
+class CToleranceImpl : public CToleranceBase, public TolCheck<T>
 {
 public:
 
-	CToleranceImpl(	std::string name, std::string desc) :
-		CToleranceBase(std::move(name), std::move(desc))
+	CToleranceImpl(	std::string name, std::string desc, T reject) :
+		CToleranceBase(std::move(name), std::move(desc)),
+		TolCheck<T>(reject)
+	{}
+		
+	CToleranceImpl(	std::string name, std::string desc, T rejectLo, T rejectHi) :
+		CToleranceBase(std::move(name), std::move(desc)),
+		TolCheck<T>(rejectLo, rejectHi)
 	{}
 
+	bool IsMinTol() const override
+	{
+		return TolCheck<T>::min_value;
+	};
+		
+	bool IsMaxTol() const override
+	{
+		return TolCheck<T>::max_value;
+	};
 };
 
+#if _MSC_VER < 1700
 template <
 	typename T = double
 >
-class CToleranceMinT :	public CToleranceImpl<T>,
-						public MinTol<T>
+class CToleranceMinT :	public CToleranceImpl<T, MinTol>
 {
 public:
 	CToleranceMinT(	std::string name, std::string desc, T rejectLo) :
-		CToleranceImpl(std::move(name), std::move(desc)),
-		MinTol(rejectLo)
+		CToleranceImpl(std::move(name), std::move(desc), rejectLo)
 	{}
-
-	bool IsMinTol() const override
-	{
-		return true;
-	}
-
-	bool IsMaxTol() const override
-	{
-		return false;
-	}
 };
 
 template <
 	typename T = double
 >
-class CToleranceMaxT :	public CToleranceImpl<T>,
-						public MaxTol<T>
+class CToleranceMaxT :	public CToleranceImpl<T, MaxTol>
 {
 public:
 	CToleranceMaxT(	std::string name, std::string desc, T rejectHi) :
-		CToleranceImpl(std::move(name), std::move(desc)),
-		MaxTol(rejectHi)
-	{}
-
-	bool IsMinTol() const override
-	{
-		return false;
-	}
-
-	bool IsMaxTol() const override
-	{
-		return true;
-	}
+	  CToleranceImpl(std::move(name), std::move(desc), rejectHi)
+	  {}
 };
 
 template <
 	typename T = double
 >
-class CToleranceDevT :	public CToleranceImpl<T>,
-						public DevTol<T>
+class CToleranceDevT :	public CToleranceImpl<T, DevTol>
 {
 public:
 	CToleranceDevT(	std::string name, std::string desc, T rejectLo, T rejectHi) :
-		CToleranceImpl(std::move(name), std::move(desc)),
-		DevTol(rejectLo, rejectHi)
-	{}
-
-	bool IsMinTol() const override
-	{
-		return true;
-	}
-
-	bool IsMaxTol() const override
-	{
-		return true;
-	}
+	  CToleranceImpl(std::move(name), std::move(desc), rejectLo, rejectHi)
+	  {}
 };
+
+#else
+using CToleranceMinT = CToleranceImpl<T, MinTol>;
+using CToleranceMaxT = CToleranceImpl<T, MaxTol>;
+using CToleranceDevT = CToleranceImpl<T, DevTol>;
+#endif
 
 // typedef for commonly used tolerance types
 typedef CToleranceDevT<>			CToleranceDev;
