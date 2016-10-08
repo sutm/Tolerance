@@ -226,20 +226,13 @@ struct ToleranceProperties
 
 	enum ERelativeMode
 	{
-		Relative = 1,
-		RelativeNot,
+		RelativeOnly = 1,
+		RelativeNA,
 		RelativeAny
 	};
 	ERelativeMode m_RelativeMode;
 
-	enum ERejectType
-	{
-		RT_Measure = 1,		// Measurement results	eg. ball pitch, ball height
-		RT_Text,			// Text results			eg. Datamatrix, OCR
-		RT_Error,			// Error results		eg. Missing ball, Location Error
-		RT_PVI				// PVI-like results which contain width, length, area	eg. PVI, Postseal defects
-	};
-	ERejectType m_RejectType;
+	bool m_bHasPerPin;
 
 	static bool Is2D(const ToleranceProperties& p)
 	{
@@ -253,11 +246,11 @@ struct ToleranceProperties
 
 	static bool IsRelative(const ToleranceProperties& p)
 	{
-		return (p.m_RelativeMode & Relative) != 0;
+		return (p.m_RelativeMode & RelativeOnly) != 0;
 	}
 
 	static bool IsNonRelative(const ToleranceProperties& p)
 	{
-		return (p.m_RelativeMode & RelativeNot) != 0;
+		return (p.m_RelativeMode & RelativeNA) != 0;
 	}
 };

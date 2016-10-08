@@ -18,33 +18,10 @@
 
 using namespace std;
 
+const bool _bHasPerPin = true;
+const bool _bNoPerPin = false;
+
 #if _MSC_VER < 1700
-map<string, ToleranceProperties> make_tolerance_properties()
-{
-	auto make_tolerance_prop = [](	ToleranceProperties::ETolCategory tolCategory, 
-									ToleranceProperties::ERelativeMode relativeMode,
-									ToleranceProperties::ERejectType rejectType) 
-									-> ToleranceProperties
-	{
-		ToleranceProperties tolprop = {tolCategory, relativeMode};
-		return tolprop;
-	};
-
-	pair<string, ToleranceProperties> _tolproperties[] =
-	{
-		make_pair("Ball Height",	make_tolerance_prop(ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny,	ToleranceProperties::RT_Measure)),
-		make_pair("Coplan",			make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Measure)),
-		make_pair("Ball Pitch",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeAny,	ToleranceProperties::RT_Measure)),
-		make_pair("Ball Quality",	make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Measure)),
-		make_pair("Warpage",		make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Measure)),
-		make_pair("Pad Size",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::Relative,		ToleranceProperties::RT_Measure)),
-		make_pair("Datamatrix",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Text)),
-		make_pair("PVI",			make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNot,	ToleranceProperties::RT_PVI))
-	};
-
-	return map<string, ToleranceProperties>(begin(_tolproperties), end(_tolproperties));
-}
-
 map<string, INSP_RESULT_ID> make_result_ids()
 {
 	pair<string, INSP_RESULT_ID> _resultIds[] =
@@ -54,10 +31,63 @@ map<string, INSP_RESULT_ID> make_result_ids()
 		make_pair("Ball Pitch",		INSP_FAIL_BALL_PITCH),
 		make_pair("Ball Quality",	INSP_FAIL_BALL_QUALITY),
 		make_pair("Warpage",		INSP_FAIL_WARPAGE),
-		make_pair("Pad Size",		INSP_FAIL_PAD_SIZE)
+		make_pair("Pad Size",		INSP_FAIL_PAD_SIZE),
+		make_pair("Matrix Code",	INSP_FAIL_MATRIX_CODE),
+		make_pair("PVI Defect1",	INSP_FAIL_PVI_DEFECT1)
 	};
 
 	return map<string, INSP_RESULT_ID>(begin(_resultIds), end(_resultIds));
+}
+
+map<string, ToleranceProperties> make_tolerance_properties()
+{
+	auto make_tolerance_prop = [](	
+		ToleranceProperties::ETolCategory tolCategory, 
+		ToleranceProperties::ERelativeMode relativeMode,
+		bool bHasPerPin) 
+		-> ToleranceProperties
+	{
+		ToleranceProperties tolprop = {tolCategory, relativeMode, bHasPerPin};
+		return tolprop;
+	};
+
+	pair<string, ToleranceProperties> _tolproperties[] =
+	{
+		make_pair("Ball Height",	make_tolerance_prop(ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny,	_bHasPerPin	)),
+		make_pair("Coplan",			make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNA,	_bHasPerPin	)),
+		make_pair("Ball Pitch",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeAny,	_bHasPerPin	)),
+		make_pair("Ball Quality",	make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNA,	_bHasPerPin	)),
+		make_pair("Warpage",		make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNA,	_bNoPerPin	)),
+		make_pair("Pad Size",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeOnly,	_bHasPerPin	)),
+		make_pair("Matrix Code",	make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNA,	_bNoPerPin	)),
+		make_pair("PVI Defect1",	make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNA,	_bNoPerPin	))
+	};
+
+	return map<string, ToleranceProperties>(begin(_tolproperties), end(_tolproperties));
+}
+
+map<int, ResultFormat> make_result_formats()
+{
+	auto make_result_format = [](	ResultFormat::ERejectType rejectType) 
+									-> ResultFormat
+	{
+		ResultFormat resultFormat = {rejectType};
+		return resultFormat;
+	};
+
+	pair<int, ResultFormat> _resultFormats[] =
+	{
+		make_pair(INSP_FAIL_BALL_HEIGHT,	make_result_format(ResultFormat::RT_Measure)),
+		make_pair(INSP_FAIL_BALL_COPLAN,	make_result_format(ResultFormat::RT_Measure)),
+		make_pair(INSP_FAIL_BALL_PITCH,		make_result_format(ResultFormat::RT_Measure)),
+		make_pair(INSP_FAIL_BALL_QUALITY,	make_result_format(ResultFormat::RT_Measure)),
+		make_pair(INSP_FAIL_WARPAGE,		make_result_format(ResultFormat::RT_Measure)),
+		make_pair(INSP_FAIL_PAD_SIZE,		make_result_format(ResultFormat::RT_Measure)),
+		make_pair(INSP_FAIL_MATRIX_CODE,	make_result_format(ResultFormat::RT_Text)),
+		make_pair(INSP_FAIL_PVI_DEFECT1,	make_result_format(ResultFormat::RT_PVI))
+	};
+
+	return map<int, ResultFormat>(begin(_resultFormats), end(_resultFormats));
 }
 #endif
 
@@ -71,7 +101,9 @@ static const map<string, INSP_RESULT_ID> g_resultIds =
 	{"Ball Pitch",		INSP_FAIL_BALL_PITCH	},
 	{"Ball Quality",	INSP_FAIL_BALL_QUALITY	},
 	{"Warpage",			INSP_FAIL_WARPAGE		},
-	{"Pad Size",		INSP_FAIL_PAD_SIZE		}
+	{"Pad Size",		INSP_FAIL_PAD_SIZE		},
+	{"Matrix Code",		INSP_FAIL_MATRIX_CODE	},
+	{"PVI Defect1",		INSP_FAIL_PVI_DEFECT1	}
 };
 #endif
 
@@ -80,15 +112,31 @@ static const map<string, ToleranceProperties> g_tolproperties =
 	make_tolerance_properties();
 #else
 {
-	{"Ball Height",		{ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny,	ToleranceProperties::RT_Measure}	},
-	{"Coplan",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Measure}	},
-	{"Ball Pitch",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeAny,	ToleranceProperties::RT_Measure}	},
-	{"Ball Quality",	{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Measure}	},
-	{"Warpage",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Measure}	},
-	{"Pad Size",		{ToleranceProperties::Tol2D,	ToleranceProperties::Relative	,	ToleranceProperties::RT_Measure}	},
-	{"Datamatrix",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNot,	ToleranceProperties::RT_Text}		},
-	{"PVI",				{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNot,	ToleranceProperties::RT_PVI}		}
+	{"Ball Height",		{ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny,	_bHasPerPin	}	},
+	{"Coplan",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNA,	_bHasPerPin	}	},
+	{"Ball Pitch",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeAny,	_bHasPerPin	}	},
+	{"Ball Quality",	{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNA,	_bHasPerPin	}	},
+	{"Warpage",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNA,	_bNoPerPin	}	},
+	{"Pad Size",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeOnly,	_bHasPerPin	}	},
+	{"Matrix Code",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNA,	_bNoPerPin	}	},
+	{"PVI Defect1",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNA,	_bNoPerPin	}	}
 };
+#endif
+
+static const map<int, ResultFormat> g_resultFormats = 
+#if _MSC_VER < 1700
+	make_result_formats();
+#else
+	{
+		{ INSP_FAIL_BALL_HEIGHT,	{ ResultFormat::RT_Measure	}),
+		{ INSP_FAIL_BALL_COPLAN,	{ ResultFormat::RT_Measure	}),
+		{ INSP_FAIL_BALL_PITCH,		{ ResultFormat::RT_Measure	}),
+		{ INSP_FAIL_BALL_QUALITY,	{ ResultFormat::RT_Measure	}),
+		{ INSP_FAIL_WARPAGE,		{ ResultFormat::RT_Measure	}),
+		{ INSP_FAIL_PAD_SIZE,		{ ResultFormat::RT_Measure	}),
+		{ INSP_FAIL_MATRIX_CODE,	{ ResultFormat::RT_Text		}),
+		{ INSP_FAIL_PVI_DEFECT1,	{ ResultFormat::RT_PVI		})
+	};
 #endif
 
 void TestMinMax()
@@ -238,18 +286,51 @@ void TestFailResult()
 
 void TestRejectType()
 {
+	vector<CToleranceBase*> tolerances;
+
 	CToleranceDev tol1("Pad Size", "", 80.0, 100.0);
-	tol1.SetPriority(0);
+	tolerances.push_back(&tol1);
 	
-	CToleranceMin tol2("Datamatrix", "", 90.0);
-	tol2.SetPriority(1);
+	CToleranceMin tol2("Matrix Code", "", 90.0);
+	tolerances.push_back(&tol2);
 	
-	CToleranceDev tol3("PVI", "", 80.0, 100.0);
-	tol3.SetPriority(2);
+	CToleranceDev tol3("PVI Defect1", "", 80.0, 100.0);
+	tolerances.push_back(&tol3);
 	
 	cout << "\nTestRejectType\n";
 	
-	//cout << left << setw(20) << resultName << ": " << resultId << ", " << resultDesc << endl;
+	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
+	{
+		auto tol = *itr;
+		auto strName = tol->GetName();
+		int id = g_resultIds.at(strName);
+		const auto& resultFormat = g_resultFormats.at(id);
+		cout << left << setw(20) << strName << ": " << resultFormat.m_RejectType << endl;
+	}
+}
+
+void TestHasPerPin()
+{
+	vector<CToleranceBase*> tolerances;
+
+	CToleranceDev tol1("Ball Height", "", 80.0, 100.0);
+	tolerances.push_back(&tol1);
+
+	CToleranceMin tol2("Matrix Code", "", 90.0);
+	tolerances.push_back(&tol2);
+
+	CToleranceDev tol3("PVI Defect1", "", 80.0, 100.0);
+	tolerances.push_back(&tol3);
+
+	cout << "\nTestHasPerPin\n";
+
+	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
+	{
+		auto tol = *itr;
+		auto strName = tol->GetName();
+		const auto& tolprop = g_tolproperties.at(strName);
+		cout << left << setw(20) << strName << ": " << boolalpha << tolprop.m_bHasPerPin << endl;
+	}
 }
 
 int main()
@@ -260,5 +341,7 @@ int main()
 	TestRelativeMode();
 	TestFailResult();
 	TestRejectType();
+	TestHasPerPin();
+
 	return 0;
 }

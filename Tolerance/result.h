@@ -8,6 +8,18 @@
 
 struct CToleranceBase;
 
+struct ResultFormat
+{
+	enum ERejectType
+	{
+		RT_Measure = 1,		// Measurement results	eg. ball pitch, ball height
+		RT_Text,			// Text results			eg. Datamatrix, OCR
+		RT_Error,			// Error results		eg. Missing ball, Location Error
+		RT_PVI				// PVI-like results which contain width, length, area	eg. PVI, Postseal defects
+	};
+	ERejectType m_RejectType;
+};
+
 class CModuleResult
 {
 public:
