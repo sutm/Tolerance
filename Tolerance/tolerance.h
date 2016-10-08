@@ -5,6 +5,73 @@
 #include <type_traits>
 #include "defines.h"
 
+// Abstract base class for tolerance
+struct CToleranceBase
+{
+	CToleranceBase(	std::string name,
+		std::string desc) :
+	m_strName(std::move(name)),
+		m_strDesc(std::move(desc)),
+		m_bEnable(false),
+		m_nPriority(0)
+	{ }
+
+	std::string GetName() const
+	{
+		return m_strName;
+	}
+
+	std::string GetDesc() const
+	{
+		return m_strDesc;
+	}
+
+	void SetDesc(std::string desc)
+	{
+		m_strDesc = std::move(desc);
+	}
+
+	bool IsEnabled() const
+	{
+		return m_bEnable;
+	}
+
+	void SetEnabled(bool bEnable)
+	{
+		m_bEnable = bEnable;
+	}
+
+	void SetPriority(int nPriority)
+	{
+		m_nPriority = nPriority;
+	}
+
+	int GetPriority() const
+	{
+		return m_nPriority;
+	}
+
+	static bool enabled_tolerance(const CToleranceBase* pTol)
+	{
+		return pTol->m_bEnable;
+	}
+
+	static bool tolerance_by_priority(const CToleranceBase* pTol1, const CToleranceBase* pTol2)
+	{
+		return pTol1->m_nPriority < pTol2->m_nPriority;
+	}
+
+	bool IsDevTol() const { return IsMinTol() && IsMaxTol(); }
+	virtual bool IsMinTol() const = 0;
+	virtual bool IsMaxTol() const = 0;
+
+protected:
+	const std::string m_strName;
+	std::string m_strDesc;
+	bool m_bEnable;
+	int m_nPriority;
+};
+
 // Tolerance Checkers can be one of the following:
 // - DevTol: check both min and max limits (default)
 // - MinTol: check min limit only
@@ -67,73 +134,6 @@ public:
 	static const bool min_value = false;
 	static const bool max_value = true;
 
-};
-
-// Abstract base class for tolerance
-struct CToleranceBase
-{
-	CToleranceBase(	std::string name,
-					std::string desc) :
-		m_strName(std::move(name)),
-		m_strDesc(std::move(desc)),
-		m_bEnable(false),
-		m_nPriority(0)
-	{ }
-
-	std::string GetName() const
-	{
-		return m_strName;
-	}
-	
-	std::string GetDesc() const
-	{
-		return m_strDesc;
-	}
-	
-	void SetDesc(std::string desc)
-	{
-		m_strDesc = std::move(desc);
-	}
-
-	bool IsEnabled() const
-	{
-		return m_bEnable;
-	}
-
-	void SetEnabled(bool bEnable)
-	{
-		m_bEnable = bEnable;
-	}
-
-	void SetPriority(int nPriority)
-	{
-		m_nPriority = nPriority;
-	}
-
-	int GetPriority() const
-	{
-		return m_nPriority;
-	}
-
-	static bool enabled_tolerance(const CToleranceBase* pTol)
-	{
-		return pTol->m_bEnable;
-	}
-
-	static bool tolerance_by_priority(const CToleranceBase* pTol1, const CToleranceBase* pTol2)
-	{
-		return pTol1->m_nPriority < pTol2->m_nPriority;
-	}
-
-	bool IsDevTol() const { return IsMinTol() && IsMaxTol(); }
-	virtual bool IsMinTol() const = 0;
-	virtual bool IsMaxTol() const = 0;
-
-protected:
-	const std::string m_strName;
-	std::string m_strDesc;
-	bool m_bEnable;
-	int m_nPriority;
 };
 
 // template class for tolerance
@@ -222,6 +222,7 @@ struct ToleranceProperties
 		Tol3D,
 		Tol2D3D
 	};
+
 	ETolCategory m_TolCategory;
 
 	enum ERelativeMode
@@ -232,6 +233,7 @@ struct ToleranceProperties
 	};
 	ERelativeMode m_RelativeMode;
 
+	
 	bool m_bHasPerPin;
 
 	static bool Is2D(const ToleranceProperties& p)
