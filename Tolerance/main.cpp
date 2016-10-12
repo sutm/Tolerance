@@ -18,9 +18,6 @@
 
 using namespace std;
 
-const bool _bHasPerPin = true;
-const bool _bNoPerPin = false;
-
 #if _MSC_VER < 1700
 map<string, INSP_RESULT_ID> make_result_ids()
 {
@@ -37,33 +34,6 @@ map<string, INSP_RESULT_ID> make_result_ids()
 	};
 
 	return map<string, INSP_RESULT_ID>(begin(_resultIds), end(_resultIds));
-}
-
-map<string, ToleranceProperties> make_tolerance_properties()
-{
-	auto make_tolerance_prop = [](	
-		ToleranceProperties::ETolCategory tolCategory, 
-		ToleranceProperties::ERelativeMode relativeMode,
-		bool bHasPerPin) 
-		-> ToleranceProperties
-	{
-		ToleranceProperties tolprop = {tolCategory, relativeMode, bHasPerPin};
-		return tolprop;
-	};
-
-	pair<string, ToleranceProperties> _tolproperties[] =
-	{
-		make_pair("Ball Height",	make_tolerance_prop(ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny,	_bHasPerPin	)),
-		make_pair("Coplan",			make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNA,	_bHasPerPin	)),
-		make_pair("Ball Pitch",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeAny,	_bHasPerPin	)),
-		make_pair("Ball Quality",	make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNA,	_bHasPerPin	)),
-		make_pair("Warpage",		make_tolerance_prop(ToleranceProperties::Tol3D,		ToleranceProperties::RelativeNA,	_bNoPerPin	)),
-		make_pair("Pad Size",		make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeOnly,	_bHasPerPin	)),
-		make_pair("Matrix Code",	make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNA,	_bNoPerPin	)),
-		make_pair("PVI Defect1",	make_tolerance_prop(ToleranceProperties::Tol2D,		ToleranceProperties::RelativeNA,	_bNoPerPin	))
-	};
-
-	return map<string, ToleranceProperties>(begin(_tolproperties), end(_tolproperties));
 }
 
 map<int, ResultFormat> make_result_formats()
@@ -104,22 +74,6 @@ static const map<string, INSP_RESULT_ID> g_resultIds =
 	{"Pad Size",		INSP_FAIL_PAD_SIZE		},
 	{"Matrix Code",		INSP_FAIL_MATRIX_CODE	},
 	{"PVI Defect1",		INSP_FAIL_PVI_DEFECT1	}
-};
-#endif
-
-static const map<string, ToleranceProperties> g_tolproperties = 
-#if _MSC_VER < 1700
-	make_tolerance_properties();
-#else
-{
-	{"Ball Height",		{ToleranceProperties::Tol2D3D,	ToleranceProperties::RelativeAny,	_bHasPerPin	}	},
-	{"Coplan",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNA,	_bHasPerPin	}	},
-	{"Ball Pitch",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeAny,	_bHasPerPin	}	},
-	{"Ball Quality",	{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNA,	_bHasPerPin	}	},
-	{"Warpage",			{ToleranceProperties::Tol3D,	ToleranceProperties::RelativeNA,	_bNoPerPin	}	},
-	{"Pad Size",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeOnly,	_bHasPerPin	}	},
-	{"Matrix Code",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNA,	_bNoPerPin	}	},
-	{"PVI Defect1",		{ToleranceProperties::Tol2D,	ToleranceProperties::RelativeNA,	_bNoPerPin	}	}
 };
 #endif
 
@@ -210,13 +164,13 @@ void Test2D3DCategory()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDevT<double>  tol1("Ball Height", "", 5.0, 100.0);
+	CToleranceDev  tol1("Ball Height", "", 5.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMaxT<double> tol2("Warpage", "", 5.0);
+	CToleranceMaxT<double, NoPerPin, Category3D, NoNominal> tol2("Warpage", "", 5.0);
 	tolerances.push_back(&tol2);
 
-	CToleranceDevT<double> tol3("Ball Pitch", "", 80.0, 100.0);
+	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 
 	cout << "\nTest2D3DCategory\n";
@@ -224,10 +178,8 @@ void Test2D3DCategory()
 	{
 		auto tol = *itr;
 		auto strName = tol->GetName();
-		const auto& tolprop = g_tolproperties.at(strName);
 		cout << left << setw(20) << strName << ": " <<
-			"2D=" << boolalpha << setw(5) << ToleranceProperties::Is2D(tolprop) << ", " <<
-			"3D=" << boolalpha << setw(5) << ToleranceProperties::Is3D(tolprop) << endl;
+			"3D Only=" << boolalpha << setw(5) << tol->Is3DOnly() << endl;
 	}
 }
 
@@ -235,24 +187,23 @@ void TestRelativeMode()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDevT<double> tol1("Pad Size", "", 80.0, 100.0);
+	CToleranceDevT<double, HasPerPin, CategoryAny, NoNominal> tol1("Pad Size", "", 80.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMinT<double> tol2("Ball Quality", "", 90.0);
+	CToleranceMinT<double, HasPerPin, CategoryAny, NoNominal> tol2("Ball Quality", "", 90.0);
 	tolerances.push_back(&tol2);
-
+	
 	CToleranceDevT<double> tol3("Ball Pitch", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
+	tol3.SetNominal(90.0);
 
 	cout << "\nTestRelativeMode\n";
 	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
 	{
 		auto tol = *itr;
 		auto strName = tol->GetName();
-		const auto& tolprop = g_tolproperties.at(strName);
 		cout << left << setw(20) << strName << ": " <<
-			"Relative=" << boolalpha << setw(5) << ToleranceProperties::IsRelative(tolprop) << ", " <<
-			"NonRelative=" << boolalpha << setw(5) << ToleranceProperties::IsNonRelative(tolprop) << endl;
+			"Fixed Relative=" << boolalpha << setw(5) << tol->IsFixedRelativeMode() << endl;
 	}
 }
 
@@ -313,13 +264,13 @@ void TestHasPerPin()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDev tol1("Ball Height", "", 80.0, 100.0);
+	CToleranceDevT<double> tol1("Ball Height", "", 80.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMin tol2("Matrix Code", "", 90.0);
+	CToleranceMinT<double, NoPerPin> tol2("Matrix Code", "", 90.0);
 	tolerances.push_back(&tol2);
 
-	CToleranceDev tol3("PVI Defect1", "", 80.0, 100.0);
+	CToleranceDevT<double, NoPerPin> tol3("PVI Defect1", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 
 	cout << "\nTestHasPerPin\n";
@@ -328,8 +279,7 @@ void TestHasPerPin()
 	{
 		auto tol = *itr;
 		auto strName = tol->GetName();
-		const auto& tolprop = g_tolproperties.at(strName);
-		cout << left << setw(20) << strName << ": " << boolalpha << tolprop.m_bHasPerPin << endl;
+		cout << left << setw(20) << strName << ": " << boolalpha << tol->HasPerPin() << endl;
 	}
 }
 

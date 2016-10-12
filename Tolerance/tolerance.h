@@ -65,6 +65,10 @@ struct CToleranceBase
 	virtual bool IsMinTol() const = 0;
 	virtual bool IsMaxTol() const = 0;
 
+	virtual bool HasPerPin() const = 0;
+	virtual bool Is3DOnly() const = 0;
+	virtual bool IsFixedRelativeMode() const = 0;
+
 protected:
 	const std::string m_strName;
 	std::string m_strDesc;
@@ -92,8 +96,8 @@ public:
 		return !(value < m_dRejectLo || value > m_dRejectHi);
 	}
 
-	static const bool min_value = true;
-	static const bool max_value = true;
+	static const bool bMinTol = true;
+	static const bool bMaxTol = true;
 
 protected:
 	T m_dRejectLo;
@@ -113,8 +117,8 @@ public:
 		return !(value < m_dRejectLo);
 	}
 
-	static const bool min_value = true;
-	static const bool max_value = false;
+	static const bool bMinTol = true;
+	static const bool bMaxTol = false;
 
 };
 
@@ -131,20 +135,81 @@ public:
 		return !(value > m_dRejectHi);
 	}
 
-	static const bool min_value = false;
-	static const bool max_value = true;
+	static const bool bMinTol = false;
+	static const bool bMaxTol = true;
 
 };
 
+template<typename T>
+struct HasNominal
+{
+public:
+	void SetNominal(T value)
+	{
+		m_dNominal = value;
+	}
+
+	T GetNominal() const
+	{
+		return m_dNominal;
+	}
+
+private:
+	T m_dNominal;
+};
+
+template<typename T>
+struct NoNominal
+{
+};
+
+struct HasPerPin
+{
+};
+typedef void NoPerPin;
+
+struct Category3D
+{
+};
+typedef void CategoryAny;
+
+template <typename T>
+struct TolTraits
+{
+	static const bool bHasPerPin = false;
+	static const bool bFor3DOnly = false;
+	static const bool bFixedRelativeMode = false;
+};
+
+template <>
+struct TolTraits<HasPerPin>
+{
+	static const bool bHasPerPin = true;
+};
+
+template <>
+struct TolTraits<Category3D>
+{
+	static const bool bFor3DOnly = true;
+};
+
+template <typename T>
+struct TolTraits<NoNominal<T>>
+{
+	static const bool bFixedRelativeMode = true;
+};
+
 // template class for tolerance
-// parameterized by the following:
-// - T: value type of tolerance (double, int, char, string)
-// - TolCheck: tolerance checker (min, max)
 template <
 	typename T = double,
-	template <typename U> class TolCheck = DevTol
+	template <typename U> class TolCheck = DevTol,			// DevTol, MinTol, MaxTol
+	typename PerPinType = HasPerPin,						// NoPerPin, HasPerPin
+	typename Category2D3DType = CategoryAny,				// CategoryAny, Category3D
+	template <typename V> class NominalType = HasNominal	// HasNominal, NoNominal
 >
-class CToleranceImpl : public CToleranceBase, public TolCheck<T>
+class CToleranceImpl :	public CToleranceBase, 
+						public TolCheck<T>,
+						public NominalType<T>
 {
 public:
 
@@ -160,20 +225,41 @@ public:
 
 	bool IsMinTol() const override
 	{
-		return TolCheck<T>::min_value;
+		return TolCheck<T>::bMinTol;
 	};
 		
 	bool IsMaxTol() const override
 	{
-		return TolCheck<T>::max_value;
+		return TolCheck<T>::bMaxTol;
 	};
+
+	bool HasPerPin() const override
+	{
+		return TolTraits<PerPinType>::bHasPerPin;
+	}
+
+	bool Is3DOnly() const override
+	{
+		return TolTraits<Category2D3DType>::bFor3DOnly;
+	}
+
+	bool IsFixedRelativeMode() const override
+	{
+		return TolTraits<NominalType<T>>::bFixedRelativeMode;
+	}
 };
 
-#if _MSC_VER < 1700
 template <
-	typename T = double
+	typename T = double,
+	typename PerPinType = HasPerPin,						// NoPerPin, HasPerPin
+	typename Category2D3DType = CategoryAny,				// CategoryAny, Category3D
+	template <typename V> class NominalType = HasNominal	// HasNominal, NoNominal
 >
-class CToleranceMinT :	public CToleranceImpl<T, MinTol>
+class CToleranceMinT :	public CToleranceImpl<T, 
+											MinTol, 
+											PerPinType, 
+											Category2D3DType, 
+											NominalType>
 {
 public:
 	CToleranceMinT(	std::string name, std::string desc, T rejectLo) :
@@ -182,9 +268,16 @@ public:
 };
 
 template <
-	typename T = double
+	typename T = double,
+	typename PerPinType = HasPerPin,						// NoPerPin, HasPerPin
+	typename Category2D3DType = CategoryAny,				// CategoryAny, Category3D
+	template <typename V> class NominalType = HasNominal	// HasNominal, NoNominal
 >
-class CToleranceMaxT :	public CToleranceImpl<T, MaxTol>
+class CToleranceMaxT :	public CToleranceImpl<T, 
+											MaxTol, 
+											PerPinType, 
+											Category2D3DType, 
+											NominalType>
 {
 public:
 	CToleranceMaxT(	std::string name, std::string desc, T rejectHi) :
@@ -193,9 +286,16 @@ public:
 };
 
 template <
-	typename T = double
+	typename T = double,
+	typename PerPinType = HasPerPin,						// NoPerPin, HasPerPin
+	typename Category2D3DType = CategoryAny,				// CategoryAny, Category3D
+	template <typename V> class NominalType = HasNominal	// HasNominal, NoNominal
 >
-class CToleranceDevT :	public CToleranceImpl<T, DevTol>
+class CToleranceDevT :	public CToleranceImpl<T, 
+											DevTol, 
+											PerPinType, 
+											Category2D3DType, 
+											NominalType>
 {
 public:
 	CToleranceDevT(	std::string name, std::string desc, T rejectLo, T rejectHi) :
@@ -203,56 +303,8 @@ public:
 	  {}
 };
 
-#else
-using CToleranceMinT = CToleranceImpl<T, MinTol>;
-using CToleranceMaxT = CToleranceImpl<T, MaxTol>;
-using CToleranceDevT = CToleranceImpl<T, DevTol>;
-#endif
-
 // typedef for commonly used tolerance types
 typedef CToleranceDevT<>			CToleranceDev;
 typedef CToleranceMinT<double>		CToleranceMin;
 typedef CToleranceMaxT<double>		CToleranceMax;
 
-struct ToleranceProperties
-{
-	enum ETolCategory
-	{
-		Tol2D = 1,
-		Tol3D,
-		Tol2D3D
-	};
-
-	ETolCategory m_TolCategory;
-
-	enum ERelativeMode
-	{
-		RelativeOnly = 1,
-		RelativeNA,
-		RelativeAny
-	};
-	ERelativeMode m_RelativeMode;
-
-	
-	bool m_bHasPerPin;
-
-	static bool Is2D(const ToleranceProperties& p)
-	{
-		return (p.m_TolCategory & Tol2D) != 0;
-	}
-
-	static bool Is3D(const ToleranceProperties& p)
-	{
-		return (p.m_TolCategory & Tol3D) != 0;
-	}
-
-	static bool IsRelative(const ToleranceProperties& p)
-	{
-		return (p.m_RelativeMode & RelativeOnly) != 0;
-	}
-
-	static bool IsNonRelative(const ToleranceProperties& p)
-	{
-		return (p.m_RelativeMode & RelativeNA) != 0;
-	}
-};
