@@ -187,13 +187,13 @@ void TestRelativeMode()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDevT<double, CToleranceImpl> tol1("Pad Size", "", 80.0, 100.0);
+	CToleranceDevT_NoNominal<double> tol1("Pad Size", "", 80.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMinT<double, CToleranceImpl> tol2("Ball Quality", "", 90.0);
+	CToleranceMinT_NoNominal<double> tol2("Ball Quality", "", 90.0);
 	tolerances.push_back(&tol2);
 	
-	CToleranceDevT<double, CToleranceNomT> tol3("Ball Pitch", "", 80.0, 100.0);
+	CToleranceDevT<double> tol3("Ball Pitch", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 	tol3.SetNominal(90.0);
 
@@ -203,7 +203,7 @@ void TestRelativeMode()
 		auto tol = *itr;
 		auto strName = tol->GetName();
 		cout << left << setw(20) << strName << ": " <<
-			"Fixed Relative=" << boolalpha << setw(5) << tol->HasRelativeMode() << endl;
+			"Has Relative=" << boolalpha << setw(5) << tol->HasRelativeMode() << endl;
 	}
 }
 
