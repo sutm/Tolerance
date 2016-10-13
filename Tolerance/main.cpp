@@ -160,26 +160,26 @@ void TestEnable()
 	}
 }
 
-void Test2D3DCategory()
+void Test2D3D()
 {
 	vector<CToleranceBase*> tolerances;
 
 	CToleranceDev  tol1("Ball Height", "", 5.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMaxT<double, NoPerPin, Category3D, NoNominal> tol2("Warpage", "", 5.0);
+	CToleranceMaxT<double, NoNominal> tol2("Warpage", "", 5.0, false, true);
 	tolerances.push_back(&tol2);
 
 	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 
-	cout << "\nTest2D3DCategory\n";
+	cout << "\nTest2D3D\n";
 	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
 	{
 		auto tol = *itr;
 		auto strName = tol->GetName();
 		cout << left << setw(20) << strName << ": " <<
-			"3D Only=" << boolalpha << setw(5) << tol->Is3DOnly() << endl;
+			"3D Only=" << boolalpha << setw(5) << tol->IsTrue3DOnly() << endl;
 	}
 }
 
@@ -187,10 +187,10 @@ void TestRelativeMode()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDevT<double, HasPerPin, CategoryAny, NoNominal> tol1("Pad Size", "", 80.0, 100.0);
+	CToleranceDevT<double, NoNominal> tol1("Pad Size", "", 80.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMinT<double, HasPerPin, CategoryAny, NoNominal> tol2("Ball Quality", "", 90.0);
+	CToleranceMinT<double, NoNominal> tol2("Ball Quality", "", 90.0);
 	tolerances.push_back(&tol2);
 	
 	CToleranceDevT<double> tol3("Ball Pitch", "", 80.0, 100.0);
@@ -267,10 +267,10 @@ void TestHasPerPin()
 	CToleranceDevT<double> tol1("Ball Height", "", 80.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMinT<double, NoPerPin> tol2("Matrix Code", "", 90.0);
+	CToleranceMinT<double> tol2("Matrix Code", "", 90.0, false);
 	tolerances.push_back(&tol2);
 
-	CToleranceDevT<double, NoPerPin> tol3("PVI Defect1", "", 80.0, 100.0);
+	CToleranceDevT<double> tol3("PVI Defect1", "", 80.0, 100.0, false);
 	tolerances.push_back(&tol3);
 
 	cout << "\nTestHasPerPin\n";
@@ -287,7 +287,7 @@ int main()
 {
 	TestMinMax();
 	TestEnable();
-	Test2D3DCategory();
+	Test2D3D();
 	TestRelativeMode();
 	TestFailResult();
 	TestRejectType();
