@@ -178,7 +178,7 @@ private:
 
 // template class for tolerance
 template <
-	typename T = double,
+	typename T,
 	template <typename U> class TolCheck = DevTol			// DevTol, MinTol, MaxTol
 >
 class CToleranceImpl :	public CToleranceBase, 
@@ -208,7 +208,7 @@ public:
 };
 
 template <
-	typename T = double,
+	typename T,
 	template <typename U> class TolCheck = DevTol			// DevTol, MinTol, MaxTol
 >
 class CToleranceNomT :	public CToleranceImpl<T, TolCheck>,
@@ -227,16 +227,17 @@ public:
 	bool HasRelativeMode() const override { return true; }
 };
 
-template <typename T = double>
+#if _MSC_VER < 1700
+template <typename T>
 class CToleranceMinT :	public CToleranceNomT<T, MinTol>
 {
 public:
 	CToleranceMinT(	std::string name, std::string desc, T rejectLo, bool bHasPerPin=true, bool bTrue3D=false) :
-		CToleranceNomT(std::move(name), std::move(desc), rejectLo, bHasPerPin, bTrue3D)
-	{}
+	  CToleranceNomT(std::move(name), std::move(desc), rejectLo, bHasPerPin, bTrue3D)
+	  {}
 };
 
-template <typename T = double>
+template <typename T>
 class CToleranceMaxT : public CToleranceNomT<T, MaxTol>
 {
 public:
@@ -245,7 +246,7 @@ public:
 	  {}
 };
 
-template <typename T = double>
+template <typename T>
 class CToleranceDevT : public CToleranceNomT<T, DevTol>
 {
 public:
@@ -254,13 +255,7 @@ public:
 	  {}
 };
 
-// typedef for commonly used tolerance types
-typedef CToleranceDevT<>			CToleranceDev;
-typedef CToleranceMinT<double>		CToleranceMin;
-typedef CToleranceMaxT<double>		CToleranceMax;
-
-
-template <typename T = double>
+template <typename T>
 class CToleranceMinT_NoNominal : public CToleranceImpl<T, MinTol>
 {
 public:
@@ -269,7 +264,7 @@ public:
 	  {}
 };
 
-template <typename T = double>
+template <typename T>
 class CToleranceMaxT_NoNominal : public CToleranceImpl<T, MaxTol>
 {
 public:
@@ -278,7 +273,7 @@ public:
 	  {}
 };
 
-template <typename T = double>
+template <typename T>
 class CToleranceDevT_NoNominal : public CToleranceImpl<T, DevTol>
 {
 public:
@@ -286,3 +281,24 @@ public:
 	  CToleranceImpl(std::move(name), std::move(desc), rejectLo, rejectHi, bHasPerPin, bTrue3D)
 	  {}
 };
+
+typedef CToleranceDevT<double>		CToleranceDev;
+typedef CToleranceMinT<double>		CToleranceMin;
+typedef CToleranceMaxT<double>		CToleranceMax;
+
+#else
+
+template<typename T> using CToleranceDevT = CToleranceNomT<T, DevTol>;
+template<typename T> using CToleranceMinT = CToleranceNomT<T, MinTol>;
+template<typename T> using CToleranceMaxT = CToleranceNomT<T, MaxTol>;
+
+template<typename T> using CToleranceDevT_NoNominal = CToleranceImpl<T, DevTol>
+template<typename T> using CToleranceMinT_NoNominal = CToleranceImpl<T, MinTol>
+template<typename T> using CToleranceMaxT_NoNominal = CToleranceImpl<T, MaxTol>
+
+using CToleranceDev = CToleranceDevT<double>;
+using CToleranceMin = CToleranceMinT<double>;
+using CToleranceMax = CToleranceMaxT<double>;
+
+#endif
+

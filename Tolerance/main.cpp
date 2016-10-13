@@ -264,13 +264,13 @@ void TestHasPerPin()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDevT<double> tol1("Ball Height", "", 80.0, 100.0);
+	CToleranceDev tol1("Ball Height", "", 80.0, 100.0);
 	tolerances.push_back(&tol1);
 
-	CToleranceMinT<double> tol2("Matrix Code", "", 90.0, false);
+	CToleranceMin tol2("Matrix Code", "", 90.0, false);
 	tolerances.push_back(&tol2);
 
-	CToleranceDevT<double> tol3("PVI Defect1", "", 80.0, 100.0, false);
+	CToleranceDev tol3("PVI Defect1", "", 80.0, 100.0, false);
 	tolerances.push_back(&tol3);
 
 	cout << "\nTestHasPerPin\n";
