@@ -69,7 +69,7 @@ struct CToleranceBase
 	bool HasPerPin() const { return m_bHasPerPin; }
 	bool IsTrue3DOnly() const { return m_bTrue3D; }
 	
-	virtual bool IsFixedRelativeMode() const = 0;
+	virtual bool HasRelativeMode() const { return false; }
 
 private:
 	const std::string m_strName;
@@ -147,7 +147,7 @@ public:
 };
 
 template<typename T>
-struct HasNominal
+struct Nominal
 {
 public:
 	void SetNominal(T value)
@@ -164,32 +164,25 @@ private:
 	T m_dNominal;
 };
 
-template<typename T>
-struct NoNominal
-{
-};
-
-template <typename T>
-struct TolTraits
-{
-	static const bool bFixedRelativeMode = false;
-};
-
-template <typename T>
-struct TolTraits<NoNominal<T>>
-{
-	static const bool bFixedRelativeMode = true;
-};
+//template <typename T>
+//struct TolTraits
+//{
+//	static const bool bFixedRelativeMode = true;
+//};
+//
+//template <typename T>
+//struct TolTraits<Nominal<T>>
+//{
+//	static const bool bFixedRelativeMode = false;
+//};
 
 // template class for tolerance
 template <
 	typename T = double,
-	template <typename U> class TolCheck = DevTol,			// DevTol, MinTol, MaxTol
-	template <typename V> class NominalType = HasNominal	// HasNominal, NoNominal
+	template <typename U> class TolCheck = DevTol			// DevTol, MinTol, MaxTol
 >
 class CToleranceImpl :	public CToleranceBase, 
-						public TolCheck<T>,
-						public NominalType<T>
+						public TolCheck<T>
 {
 public:
 
@@ -212,52 +205,63 @@ public:
 	{
 		return TolCheck<T>::bMaxTol;
 	};
-
-	bool IsFixedRelativeMode() const override
-	{
-		return TolTraits<NominalType<T>>::bFixedRelativeMode;
-	}
 };
 
 template <
 	typename T = double,
-	template <typename V> class NominalType = HasNominal	// HasNominal, NoNominal
+	template <typename U> class TolCheck = DevTol			// DevTol, MinTol, MaxTol
 >
-class CToleranceMinT :	public CToleranceImpl<T, 
-											MinTol, 
-											NominalType>
+class CToleranceNomT :	public CToleranceImpl<T, TolCheck>,
+						public Nominal<T>
+{
+public:
+
+	CToleranceNomT(	std::string name, std::string desc, T reject, bool bHasPerPin=true, bool bTrue3D=false) :
+			CToleranceImpl(std::move(name), std::move(desc), bHasPerPin, bTrue3D)
+	  {}
+
+	CToleranceNomT(	std::string name, std::string desc, T rejectLo, T rejectHi, bool bHasPerPin=true, bool bTrue3D=false) :
+			CToleranceImpl(std::move(name), std::move(desc), bHasPerPin, bTrue3D)
+	  {}
+
+	bool HasRelativeMode() const override { return true; }
+};
+
+CToleranceNomT<double, DevTol> m_test;
+
+template <
+	typename T = double,
+	template <typename U, template <typename V> class TolChecker> class TolType = CToleranceNomT
+>
+class CToleranceMinT :	public TolType<T, MinTol>
 {
 public:
 	CToleranceMinT(	std::string name, std::string desc, T rejectLo, bool bHasPerPin=true, bool bTrue3D=false) :
-		CToleranceImpl(std::move(name), std::move(desc), rejectLo, bHasPerPin, bTrue3D)
+		TolType(std::move(name), std::move(desc), rejectLo, bHasPerPin, bTrue3D)
 	{}
 };
 
 template <
 	typename T = double,
-	template <typename V> class NominalType = HasNominal	// HasNominal, NoNominal
+	template <typename U, template <typename V> class TolChecker> class TolType = CToleranceNomT
 >
-class CToleranceMaxT :	public CToleranceImpl<T, 
-											MaxTol, 
-											NominalType>
+class CToleranceMaxT :	public TolType<T, MaxTol>
 {
 public:
 	CToleranceMaxT(	std::string name, std::string desc, T rejectHi, bool bHasPerPin=true, bool bTrue3D=false) :
-	  CToleranceImpl(std::move(name), std::move(desc), rejectHi, bHasPerPin, bTrue3D)
+	  TolType(std::move(name), std::move(desc), rejectHi, bHasPerPin, bTrue3D)
 	  {}
 };
 
 template <
 	typename T = double,
-	template <typename V> class NominalType = HasNominal	// HasNominal, NoNominal
+	template <typename U, template <typename V> class TolChecker> class TolType = CToleranceNomT
 >
-class CToleranceDevT :	public CToleranceImpl<T, 
-											DevTol, 
-											NominalType>
+class CToleranceDevT :	public TolType<T, DevTol>
 {
 public:
 	CToleranceDevT(	std::string name, std::string desc, T rejectLo, T rejectHi, bool bHasPerPin=true, bool bTrue3D=false) :
-	  CToleranceImpl(std::move(name), std::move(desc), rejectLo, rejectHi, bHasPerPin, bTrue3D)
+	  TolType(std::move(name), std::move(desc), rejectLo, rejectHi, bHasPerPin, bTrue3D)
 	  {}
 };
 
