@@ -69,7 +69,7 @@ struct CToleranceBase
 	bool HasPerPin() const { return m_bHasPerPin; }
 	bool IsTrue3DOnly() const { return m_bTrue3D; }
 	
-	virtual bool HasRelativeMode() const { return false; }
+	virtual bool HasRelativeMode() const = 0;
 
 private:
 	const std::string m_strName;
@@ -146,24 +146,6 @@ public:
 
 };
 
-template<typename T>
-struct Nominal
-{
-public:
-	void SetNominal(T value)
-	{
-		m_dNominal = value;
-	}
-
-	T GetNominal() const
-	{
-		return m_dNominal;
-	}
-
-private:
-	T m_dNominal;
-};
-
 //template <typename T>
 //struct TolTraits
 //{
@@ -205,14 +187,15 @@ public:
 	{
 		return TolCheck<T>::bMaxTol;
 	};
+
+	bool HasRelativeMode() const override { return false; }
 };
 
 template <
 	typename T,
 	template <typename U> class TolCheck = DevTol			// DevTol, MinTol, MaxTol
 >
-class CToleranceNomT :	public CToleranceImpl<T, TolCheck>,
-						public Nominal<T>
+class CToleranceNomT :	public CToleranceImpl<T, TolCheck>
 {
 public:
 
@@ -225,6 +208,19 @@ public:
 	  {}
 
 	bool HasRelativeMode() const override { return true; }
+
+	void SetNominal(T value)
+	{
+		m_dNominal = value;
+	}
+
+	T GetNominal() const
+	{
+		return m_dNominal;
+	}
+
+private:
+	T m_dNominal;
 };
 
 #if _MSC_VER < 1700
