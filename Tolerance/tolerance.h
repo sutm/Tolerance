@@ -69,7 +69,7 @@ struct CToleranceBase
 	bool HasPerPin() const { return m_bHasPerPin; }
 	bool IsTrue3DOnly() const { return m_bTrue3D; }
 	
-	virtual bool HasRelativeMode() const = 0;
+	virtual bool HasRelativeMode() const = 0;// { return false; }
 
 private:
 	const std::string m_strName;
@@ -146,6 +146,27 @@ public:
 
 };
 
+template <typename T, typename Derived>
+class Nominal
+{
+public:
+	void SetNominal(T value)
+	{
+		m_dNominal = value;
+	}
+
+	T GetNominal() const
+	{
+		return m_dNominal;
+	}
+
+	virtual bool HasRelativeMode() const { return true; }
+
+private:
+	T m_dNominal;
+	bool m_bRelative;
+};
+
 //template <typename T>
 //struct TolTraits
 //{
@@ -188,14 +209,15 @@ public:
 		return TolCheck<T>::bMaxTol;
 	};
 
-	bool HasRelativeMode() const override { return false; }
+	virtual bool HasRelativeMode() const { return false; }
 };
 
 template <
 	typename T,
 	template <typename U> class TolCheck = DevTol			// DevTol, MinTol, MaxTol
 >
-class CToleranceNomT :	public CToleranceImpl<T, TolCheck>
+class CToleranceNomT :	public CToleranceImpl<T, TolCheck>, 
+						public Nominal<T, CToleranceNomT<T, TolCheck>>
 {
 public:
 
@@ -207,20 +229,25 @@ public:
 			CToleranceImpl(std::move(name), std::move(desc), rejectLo, rejectHi, bHasPerPin, bTrue3D)
 	  {}
 
-	bool HasRelativeMode() const override { return true; }
+	using Nominal<T, CToleranceNomT<T, TolCheck>>::HasRelativeMode;
+};
 
-	void SetNominal(T value)
-	{
-		m_dNominal = value;
-	}
+template <
+	typename T,
+	template <typename U> class TolCheck = DevTol			// DevTol, MinTol, MaxTol
+>
+class CTolerance2DT : public CToleranceImpl<T, TolCheck>
+{
+	
+};
 
-	T GetNominal() const
-	{
-		return m_dNominal;
-	}
+template <
+	typename T,
+	template <typename U> class TolCheck = DevTol			// DevTol, MinTol, MaxTol
+>
+class CTolerance3DT : public CToleranceImpl<T, TolCheck>
+{
 
-private:
-	T m_dNominal;
 };
 
 #if _MSC_VER < 1700
