@@ -160,138 +160,138 @@ void TestEnable()
 	}
 }
 
-void Test2D3D()
-{
-	vector<CToleranceBase*> tolerances;
-
-	CToleranceDev  tol1("Ball Height", "", 5.0, 100.0);
-	tolerances.push_back(&tol1);
-
-	CToleranceMaxT<double> tol2("Warpage", "", 5.0, false, true);
-	tolerances.push_back(&tol2);
-
-	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0);
-	tolerances.push_back(&tol3);
-
-	cout << "\nTest2D3D\n";
-	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
-	{
-		auto tol = *itr;
-		auto strName = tol->GetName();
-		cout << left << setw(20) << strName << ": " <<
-			"3D Only=" << boolalpha << setw(5) << tol->IsTrue3DOnly() << endl;
-	}
-}
-
-void TestRelativeMode()
-{
-	vector<CToleranceBase*> tolerances;
-
-	CToleranceDevT_NoNominal<double> tol1("Pad Size", "", 80.0, 100.0);
-	tolerances.push_back(&tol1);
-
-	CToleranceMinT_NoNominal<double> tol2("Ball Quality", "", 90.0);
-	tolerances.push_back(&tol2);
-	
-	CToleranceDevT<double> tol3("Ball Pitch", "", 80.0, 100.0);
-	tolerances.push_back(&tol3);
-	tol3.SetNominal(90.0);
-
-	cout << "\nTestRelativeMode\n";
-	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
-	{
-		auto tol = *itr;
-		auto strName = tol->GetName();
-		cout << left << setw(20) << strName << ": " <<
-			"Has Relative=" << boolalpha << setw(5) << tol->HasRelativeMode() << endl;
-	}
-}
-
-void TestFailResult()
-{
-	CModuleResult moduleResult(g_resultIds);
-
-	CToleranceDev tol1("Pad Size", "", 80.0, 100.0);
-	tol1.SetPriority(0);
-	moduleResult.AddFailResult(&tol1, "Pad Size: 40 (80.0, 100), Fail");
-
-	CToleranceMin tol2("Ball Quality", "", 90.0);
-	tol2.SetPriority(1);
-	moduleResult.AddFailResult(&tol2, "Ball Quality: 40 < 90.0, Fail");
-
-	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0);
-	tol3.SetPriority(2);
-	moduleResult.AddFailResult(&tol3, "Ball Pitch: 101 (80.0, 100), Fail");
-		
-	cout << "\nTestFailResult\n";
-	INSP_RESULT_ID resultId;
-	string resultName, resultDesc;
-	tie(resultName, resultId, resultDesc) = moduleResult.GetFirstFailResult();
-
-	cout << left << setw(20) << resultName << ": " << resultId << ", " << resultDesc << endl;
-
-	auto resultIds = moduleResult.GetFailResultIds();
-	for (auto itr = resultIds.begin(); itr != resultIds.end(); ++itr)
-		cout << left << setw(20) << "Fail Tolerance Id: " << *itr << endl;
-}
-
-void TestRejectType()
-{
-	vector<CToleranceBase*> tolerances;
-
-	CToleranceDev tol1("Pad Size", "", 80.0, 100.0);
-	tolerances.push_back(&tol1);
-	
-	CToleranceMin tol2("Matrix Code", "", 90.0);
-	tolerances.push_back(&tol2);
-	
-	CToleranceDev tol3("PVI Defect1", "", 80.0, 100.0);
-	tolerances.push_back(&tol3);
-	
-	cout << "\nTestRejectType\n";
-	
-	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
-	{
-		auto tol = *itr;
-		auto strName = tol->GetName();
-		int id = g_resultIds.at(strName);
-		const auto& resultFormat = g_resultFormats.at(id);
-		cout << left << setw(20) << strName << ": " << resultFormat.m_RejectType << endl;
-	}
-}
-
-void TestHasPerPin()
-{
-	vector<CToleranceBase*> tolerances;
-
-	CToleranceDev tol1("Ball Height", "", 80.0, 100.0);
-	tolerances.push_back(&tol1);
-
-	CToleranceMin tol2("Matrix Code", "", 90.0, false);
-	tolerances.push_back(&tol2);
-
-	CToleranceDev tol3("PVI Defect1", "", 80.0, 100.0, false);
-	tolerances.push_back(&tol3);
-
-	cout << "\nTestHasPerPin\n";
-
-	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
-	{
-		auto tol = *itr;
-		auto strName = tol->GetName();
-		cout << left << setw(20) << strName << ": " << boolalpha << tol->HasPerPin() << endl;
-	}
-}
+//void Test2D3D()
+//{
+//	vector<CToleranceBase*> tolerances;
+//
+//	CToleranceDev  tol1("Ball Height", "", 5.0, 100.0);
+//	tolerances.push_back(&tol1);
+//
+//	CToleranceMaxT<double> tol2("Warpage", "", 5.0, false, true);
+//	tolerances.push_back(&tol2);
+//
+//	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0);
+//	tolerances.push_back(&tol3);
+//
+//	cout << "\nTest2D3D\n";
+//	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
+//	{
+//		auto tol = *itr;
+//		auto strName = tol->GetName();
+//		cout << left << setw(20) << strName << ": " <<
+//			"3D Only=" << boolalpha << setw(5) << tol->IsTrue3DOnly() << endl;
+//	}
+//}
+//
+//void TestRelativeMode()
+//{
+//	vector<CToleranceBase*> tolerances;
+//
+//	CToleranceDevT_NoNominal<double> tol1("Pad Size", "", 80.0, 100.0);
+//	tolerances.push_back(&tol1);
+//
+//	CToleranceMinT_NoNominal<double> tol2("Ball Quality", "", 90.0);
+//	tolerances.push_back(&tol2);
+//	
+//	CToleranceDevT<double> tol3("Ball Pitch", "", 80.0, 100.0);
+//	tolerances.push_back(&tol3);
+//	tol3.SetNominal(90.0);
+//
+//	cout << "\nTestRelativeMode\n";
+//	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
+//	{
+//		auto tol = *itr;
+//		auto strName = tol->GetName();
+//		cout << left << setw(20) << strName << ": " <<
+//			"Has Relative=" << boolalpha << setw(5) << tol->HasRelativeMode() << endl;
+//	}
+//}
+//
+//void TestFailResult()
+//{
+//	CModuleResult moduleResult(g_resultIds);
+//
+//	CToleranceDev tol1("Pad Size", "", 80.0, 100.0);
+//	tol1.SetPriority(0);
+//	moduleResult.AddFailResult(&tol1, "Pad Size: 40 (80.0, 100), Fail");
+//
+//	CToleranceMin tol2("Ball Quality", "", 90.0);
+//	tol2.SetPriority(1);
+//	moduleResult.AddFailResult(&tol2, "Ball Quality: 40 < 90.0, Fail");
+//
+//	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0);
+//	tol3.SetPriority(2);
+//	moduleResult.AddFailResult(&tol3, "Ball Pitch: 101 (80.0, 100), Fail");
+//		
+//	cout << "\nTestFailResult\n";
+//	INSP_RESULT_ID resultId;
+//	string resultName, resultDesc;
+//	tie(resultName, resultId, resultDesc) = moduleResult.GetFirstFailResult();
+//
+//	cout << left << setw(20) << resultName << ": " << resultId << ", " << resultDesc << endl;
+//
+//	auto resultIds = moduleResult.GetFailResultIds();
+//	for (auto itr = resultIds.begin(); itr != resultIds.end(); ++itr)
+//		cout << left << setw(20) << "Fail Tolerance Id: " << *itr << endl;
+//}
+//
+//void TestRejectType()
+//{
+//	vector<CToleranceBase*> tolerances;
+//
+//	CToleranceDev tol1("Pad Size", "", 80.0, 100.0);
+//	tolerances.push_back(&tol1);
+//	
+//	CToleranceMin tol2("Matrix Code", "", 90.0);
+//	tolerances.push_back(&tol2);
+//	
+//	CToleranceDev tol3("PVI Defect1", "", 80.0, 100.0);
+//	tolerances.push_back(&tol3);
+//	
+//	cout << "\nTestRejectType\n";
+//	
+//	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
+//	{
+//		auto tol = *itr;
+//		auto strName = tol->GetName();
+//		int id = g_resultIds.at(strName);
+//		const auto& resultFormat = g_resultFormats.at(id);
+//		cout << left << setw(20) << strName << ": " << resultFormat.m_RejectType << endl;
+//	}
+//}
+//
+//void TestHasPerPin()
+//{
+//	vector<CToleranceBase*> tolerances;
+//
+//	CToleranceDev tol1("Ball Height", "", 80.0, 100.0);
+//	tolerances.push_back(&tol1);
+//
+//	CToleranceMin tol2("Matrix Code", "", 90.0, false);
+//	tolerances.push_back(&tol2);
+//
+//	CToleranceDev tol3("PVI Defect1", "", 80.0, 100.0, false);
+//	tolerances.push_back(&tol3);
+//
+//	cout << "\nTestHasPerPin\n";
+//
+//	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
+//	{
+//		auto tol = *itr;
+//		auto strName = tol->GetName();
+//		cout << left << setw(20) << strName << ": " << boolalpha << tol->HasPerPin() << endl;
+//	}
+//}
 
 int main()
 {
 	TestMinMax();
 	TestEnable();
-	Test2D3D();
-	TestRelativeMode();
-	TestFailResult();
-	TestRejectType();
-	TestHasPerPin();
+	//Test2D3D();
+	//TestRelativeMode();
+	//TestFailResult();
+	//TestRejectType();
+	//TestHasPerPin();
 
 	return 0;
 }
