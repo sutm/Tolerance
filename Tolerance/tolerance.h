@@ -61,11 +61,11 @@ struct CToleranceBase
 		return pTol1->m_nPriority < pTol2->m_nPriority;
 	}
 
-	bool IsDevTol() const { return IsMinTol() && IsMaxTol(); }
+	virtual bool IsDevTol() const = 0;
 	virtual bool IsMinTol() const = 0;
 	virtual bool IsMaxTol() const = 0;
 
-	bool HasPerPin() const { return true; }
+	virtual bool HasPerPin() const = 0;
 	virtual bool Is3DOnly() const = 0;
 	
 	virtual bool HasRelativeMode() const = 0;
@@ -103,6 +103,11 @@ public:
 		return !(value < m_dRejectLo || value > m_dRejectHi);
 	}
 
+	void SetRejectLCL(T value) { m_dRejectLo = value; }
+	void SetRejectUCL(T value) { m_dRejectHi = value; }
+	T GetRejectLCL() const { return m_dRejectLo; }
+	T GetRejectUCL() const { return m_dRejectHi; }
+
 protected:
 	T m_dRejectLo;
 	T m_dRejectHi;
@@ -125,6 +130,9 @@ public:
 		return !(value < m_dRejectLo);
 	}
 
+	void SetRejectLCL(T value) { m_dRejectLo = value; }
+	T GetRejectLCL() const { return m_dRejectLo; }
+
 private:
 	T m_dRejectLo;
 };
@@ -146,27 +154,11 @@ public:
 		return !(value > m_dRejectHi);
 	}
 
+	void SetRejectUCL(T value) { m_dRejectHi = value; }
+	T GetRejectUCL() const { return m_dRejectHi; }
+
 private:
 	T m_dRejectHi;
-};
-
-template <typename Derived, typename T>
-class Nominal
-{
-public:
-	void SetNominal(T value)
-	{
-		m_dNominal = value;
-	}
-
-	T GetNominal() const
-	{
-		return m_dNominal;
-	}
-
-private:
-	T m_dNominal;
-	bool m_bRelative;
 };
 
 // template class for tolerance
@@ -203,9 +195,19 @@ public:
 		return TolCheck<T>::MaxLimit;
 	}
 
+	bool IsDevTol() const override
+	{
+		return !TolCheck<T>::SingleLimit;
+	}
+
 	bool Is3DOnly() const override
 	{
 		return Traits::Is3DOnly();
+	}
+
+	bool HasPerPin() const override
+	{
+		return Traits::HasPerPin();
 	}
 };
 
@@ -239,23 +241,31 @@ template <
 	template <typename U> class TolCheck = DevTol,			// DevTol, MinTol, MaxTol
 	typename Traits = TolPerPinTraits
 >
-class CToleranceNomT :	public CToleranceImplBaseT<T, TolCheck, Traits>, 
-						public Nominal<Derived, T>
+class CToleranceNomT :	public CToleranceImplBaseT<T, TolCheck, Traits>
 {
 public:
 	template <typename U>
 	CToleranceNomT(	std::string name, std::string desc, U rejectLo, U rejectHi,
 		typename std::enable_if<!TolCheck<U>::SingleLimit>::type* = 0) :
-		CToleranceImplBaseT(std::move(name), std::move(desc), rejectLo, rejectHi)
+		CToleranceImplBaseT(std::move(name), std::move(desc), rejectLo, rejectHi),
+		m_bRelative(false)
 	{}
 
 	template <typename U>
 	CToleranceNomT(std::string name, std::string desc, U reject,
 		typename std::enable_if<TolCheck<U>::SingleLimit>::type* = 0) :
-		CToleranceImplBaseT(std::move(name), std::move(desc), reject)
+		CToleranceImplBaseT(std::move(name), std::move(desc), reject),
+		m_bRelative(false)
 	{}
 
 	virtual bool HasRelativeMode() const { return true; }
+
+	void SetNominal(T value) { m_dNominal = value; }
+	T GetNominal() const { return m_dNominal; }
+
+private:
+	T m_dNominal;
+	bool m_bRelative;
 };
 
 template <typename T, typename Traits = TolPerPinTraits>

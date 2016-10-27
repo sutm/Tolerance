@@ -63,6 +63,18 @@ public:
 		return vResultIds;
 	}
 
+	std::string GetTolNameByResultId(int nResultId) const
+	{
+		auto itr = std::find_if(m_ResultIds.begin(), m_ResultIds.end(), [nResultId](const ResultIdType& r)
+		{
+			return r.second == nResultId;
+		});
+
+		if (itr != m_ResultIds.end())
+			return itr->first;
+		return "";
+	}
+
 private:
 	INSP_RESULT_ID GetResultIdByTolName(const std::string& strName) const
 	{
@@ -70,6 +82,8 @@ private:
 	}
 
 	const std::map<std::string, INSP_RESULT_ID>& m_ResultIds;
+	typedef std::pair<std::string, INSP_RESULT_ID> ResultIdType;
+
 	std::vector<CToleranceBase*> m_FailTolerances;
 	//typedef decltype(CToleranceBase::GetName()) tol_name;
 	std::map<std::string, std::string> m_ResultDescs;
