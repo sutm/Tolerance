@@ -12,12 +12,12 @@ class CTolTraits
 public:
 	static bool Is3D()
 	{
-		return (t_dwFlags | TOL_3D) != 0;
+		return (t_dwFlags & TOL_3D) != 0;
 	}
 
 	static bool Is2D()
 	{
-		return (t_dwFlags | TOL_2D) != 0;
+		return (t_dwFlags & TOL_2D) != 0;
 	}
 
 	static bool Is3DOnly()
@@ -27,10 +27,14 @@ public:
 
 	static bool HasPerPin()
 	{
-		return (t_dwFlags | TOL_PERPIN) != 0;
+		return (t_dwFlags & TOL_PERPIN) != 0;
 	}
 };
 
-typedef CTolTraits<TOL_2D | TOL_PERPIN> CTol2DPerPinTraits;
-typedef CTolTraits<TOL_3D | TOL_PERPIN> CTol3DPerPinTraits;
-typedef CTolTraits<TOL_2D3D | TOL_PERPIN> CTolAllDPerPinTraits;
+typedef CTolTraits<TOL_2D | TOL_PERPIN> Tol2DPerPinTraits;
+typedef CTolTraits<TOL_3D | TOL_PERPIN> Tol3DPerPinTraits;
+typedef CTolTraits<TOL_2D3D | TOL_PERPIN> TolPerPinTraits;
+
+typedef CTolTraits<TOL_2D> Tol2DTraits;
+typedef CTolTraits<TOL_3D> Tol3DTraits;
+typedef CTolTraits<TOL_2D3D> TolTraits;

@@ -82,14 +82,14 @@ static const map<int, ResultFormat> g_resultFormats =
 	make_result_formats();
 #else
 	{
-		{ INSP_FAIL_BALL_HEIGHT,	{ ResultFormat::RT_Measure	}),
-		{ INSP_FAIL_BALL_COPLAN,	{ ResultFormat::RT_Measure	}),
-		{ INSP_FAIL_BALL_PITCH,		{ ResultFormat::RT_Measure	}),
-		{ INSP_FAIL_BALL_QUALITY,	{ ResultFormat::RT_Measure	}),
-		{ INSP_FAIL_WARPAGE,		{ ResultFormat::RT_Measure	}),
-		{ INSP_FAIL_PAD_SIZE,		{ ResultFormat::RT_Measure	}),
-		{ INSP_FAIL_MATRIX_CODE,	{ ResultFormat::RT_Text		}),
-		{ INSP_FAIL_PVI_DEFECT1,	{ ResultFormat::RT_PVI		})
+		{ INSP_FAIL_BALL_HEIGHT,	{ ResultFormat::RT_Measure	}},
+		{ INSP_FAIL_BALL_COPLAN,	{ ResultFormat::RT_Measure	}},
+		{ INSP_FAIL_BALL_PITCH,		{ ResultFormat::RT_Measure	}},
+		{ INSP_FAIL_BALL_QUALITY,	{ ResultFormat::RT_Measure	}},
+		{ INSP_FAIL_WARPAGE,		{ ResultFormat::RT_Measure	}},
+		{ INSP_FAIL_PAD_SIZE,		{ ResultFormat::RT_Measure	}},
+		{ INSP_FAIL_MATRIX_CODE,	{ ResultFormat::RT_Text		}},
+		{ INSP_FAIL_PVI_DEFECT1,	{ ResultFormat::RT_PVI		}}
 	};
 #endif
 
@@ -160,29 +160,29 @@ void TestEnable()
 	}
 }
 
-//void Test2D3D()
-//{
-//	vector<CToleranceBase*> tolerances;
-//
-//	CToleranceDev  tol1("Ball Height", "", 5.0, 100.0);
-//	tolerances.push_back(&tol1);
-//
-//	CToleranceMaxT<double> tol2("Warpage", "", 5.0, false, true);
-//	tolerances.push_back(&tol2);
-//
-//	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0);
-//	tolerances.push_back(&tol3);
-//
-//	cout << "\nTest2D3D\n";
-//	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
-//	{
-//		auto tol = *itr;
-//		auto strName = tol->GetName();
-//		cout << left << setw(20) << strName << ": " <<
-//			"3D Only=" << boolalpha << setw(5) << tol->IsTrue3DOnly() << endl;
-//	}
-//}
-//
+void Test2D3D()
+{
+	vector<CToleranceBase*> tolerances;
+
+	CToleranceDevT<double, TolPerPinTraits>  tol1("Ball Height", "", 5.0, 100.0);
+	tolerances.push_back(&tol1);
+
+	CToleranceMaxT<double, Tol3DTraits> tol2("Warpage", "", 5.0);
+	tolerances.push_back(&tol2);
+
+	CToleranceDevT<double, Tol2DPerPinTraits> tol3("Ball Pitch", "", 80.0, 100.0);
+	tolerances.push_back(&tol3);
+
+	cout << "\nTest2D3D\n";
+	for (auto itr = tolerances.begin(); itr != tolerances.end(); ++itr)
+	{
+		auto tol = *itr;
+		auto strName = tol->GetName();
+		cout << left << setw(20) << strName << ": " <<
+			"3D Only=" << boolalpha << setw(5) << tol->Is3DOnly() << endl;
+	}
+}
+
 //void TestRelativeMode()
 //{
 //	vector<CToleranceBase*> tolerances;
@@ -287,7 +287,7 @@ int main()
 {
 	TestMinMax();
 	TestEnable();
-	//Test2D3D();
+	Test2D3D();
 	//TestRelativeMode();
 	//TestFailResult();
 	//TestRejectType();

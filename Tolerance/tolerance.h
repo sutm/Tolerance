@@ -66,7 +66,7 @@ struct CToleranceBase
 	virtual bool IsMaxTol() const = 0;
 
 	bool HasPerPin() const { return true; }
-	bool IsTrue3DOnly() const { return false; }
+	virtual bool Is3DOnly() const = 0;
 	
 	virtual bool HasRelativeMode() const = 0;// { return false; }
 
@@ -88,6 +88,10 @@ template<typename T>
 struct DevTol
 {
 public:
+	static const bool MinLimit = true;
+	static const bool MaxLimit = true;
+	static const bool SingleLimit = !(MinLimit && MaxLimit);
+
 	DevTol(T dRejectLo, T dRejectHi) : 
 		m_dRejectLo(dRejectLo),
 		m_dRejectHi(dRejectHi)
@@ -99,19 +103,20 @@ public:
 		return !(value < m_dRejectLo || value > m_dRejectHi);
 	}
 
-	static const bool bMinTol = true;
-	static const bool bMaxTol = true;
-
 protected:
 	T m_dRejectLo;
 	T m_dRejectHi;
 };
 
 template<typename T>
-struct MinTol : public DevTol<T>
+struct MinTol
 {
 public:
-	MinTol(T dRejectLo) : DevTol(dRejectLo, T())
+	static const bool MinLimit = true;
+	static const bool MaxLimit = false;
+	static const bool SingleLimit = !(MinLimit && MaxLimit);
+
+	MinTol(T dRejectLo) : m_dRejectLo(dRejectLo)
 	{}
 
 	// check tolerance and return true if passes
@@ -120,16 +125,19 @@ public:
 		return !(value < m_dRejectLo);
 	}
 
-	static const bool bMinTol = true;
-	static const bool bMaxTol = false;
-
+private:
+	T m_dRejectLo;
 };
 
 template<typename T>
-struct MaxTol : public DevTol<T>
+struct MaxTol
 {
 public:
-	MaxTol(T dRejectHi) : DevTol(T(), dRejectHi)
+	static const bool MinLimit = false;
+	static const bool MaxLimit = true;
+	static const bool SingleLimit = !(MinLimit && MaxLimit);
+
+	MaxTol(T dRejectHi) : m_dRejectHi(dRejectHi)
 	{}
 
 	// check tolerance and return true if passes
@@ -138,9 +146,8 @@ public:
 		return !(value > m_dRejectHi);
 	}
 
-	static const bool bMinTol = false;
-	static const bool bMaxTol = true;
-
+private:
+	T m_dRejectHi;
 };
 
 template <typename Derived, typename T>
@@ -168,33 +175,41 @@ private:
 template <
 	typename Derived,
 	typename T,
-	template <typename U> class TolCheck = DevTol			// DevTol, MinTol, MaxTol
+	template <typename U> class TolCheck = DevTol,			// DevTol, MinTol, MaxTol
+	typename Traits = TolPerPinTraits
 >
 class CToleranceImpl :	public CToleranceBase, 
 						public TolCheck<T>
 {
 public:
-	typedef T value_type;
-
-	CToleranceImpl(	std::string name, std::string desc, T reject) :
-		CToleranceBase(std::move(name), std::move(desc)),
-		TolCheck<T>(reject)
-	{}
-		
-	CToleranceImpl(	std::string name, std::string desc, T rejectLo, T rejectHi) :
+	template <typename U>
+	CToleranceImpl(std::string name, std::string desc, U rejectLo, U rejectHi,
+		typename std::enable_if<!TolCheck<U>::SingleLimit>::type* = 0) :
 		CToleranceBase(std::move(name), std::move(desc)),
 		TolCheck<T>(rejectLo, rejectHi)
 	{}
 
+	template <typename U>
+	CToleranceImpl(	std::string name, std::string desc, U reject, 
+		typename std::enable_if<TolCheck<U>::SingleLimit>::type* = 0) :
+		CToleranceBase(std::move(name), std::move(desc)),
+		TolCheck<T>(reject)
+	{}
+	
 	bool IsMinTol() const override
 	{
-		return TolCheck<T>::bMinTol;
-	};
+		return TolCheck<T>::MinLimit;
+	}
 		
 	bool IsMaxTol() const override
 	{
-		return TolCheck<T>::bMaxTol;
-	};
+		return TolCheck<T>::MaxLimit;
+	}
+
+	bool Is3DOnly() const override
+	{
+		return Traits::Is3DOnly();
+	}
 
 	virtual bool HasRelativeMode() const { return false; }
 };
@@ -202,50 +217,49 @@ public:
 template <
 	typename Derived,
 	typename T,
-	template <typename U> class TolCheck = DevTol			// DevTol, MinTol, MaxTol
+	template <typename U> class TolCheck = DevTol,			// DevTol, MinTol, MaxTol
+	typename Traits = TolPerPinTraits
 >
-class CToleranceNomT :	public CToleranceImpl<Derived, T, TolCheck>, 
+class CToleranceNomT :	public CToleranceImpl<Derived, T, TolCheck, Traits>, 
 						public Nominal<Derived, T>
 {
 public:
-	typedef T value_type;
+	template <typename U>
+	CToleranceNomT(	std::string name, std::string desc, U rejectLo, U rejectHi,
+		typename std::enable_if<!TolCheck<U>::SingleLimit>::type* = 0) :
+		CToleranceImpl(std::move(name), std::move(desc), rejectLo, rejectHi)
+	{}
 
-	CToleranceNomT(	std::string name, std::string desc, T reject) :
-			CToleranceImpl(std::move(name), std::move(desc), reject)
-	  {}
-
-	CToleranceNomT(	std::string name, std::string desc, T rejectLo, T rejectHi) :
-			CToleranceImpl(std::move(name), std::move(desc), rejectLo)
-	  {}
+	template <typename U>
+	CToleranceNomT(std::string name, std::string desc, U reject,
+		typename std::enable_if<TolCheck<U>::SingleLimit>::type* = 0) :
+		CToleranceImpl(std::move(name), std::move(desc), reject)
+	{}
 
 };
 
-template <typename T>
-class CToleranceMinT :	public CToleranceNomT<CToleranceMinT<T>, T, MinTol>
+template <typename T, typename Traits = TolPerPinTraits>
+class CToleranceMinT :	public CToleranceNomT<CToleranceMinT<T>, T, MinTol, Traits>
 {
 public:
-	typedef T value_type;
 	CToleranceMinT(	std::string name, std::string desc, T rejectLo) :
 	  CToleranceNomT(std::move(name), std::move(desc), rejectLo)
 	  {}
 };
 
-template <typename T>
-class CToleranceMaxT : public CToleranceNomT<CToleranceMaxT<T>, T, MaxTol>
+template <typename T, typename Traits = TolPerPinTraits>
+class CToleranceMaxT : public CToleranceNomT<CToleranceMaxT<T>, T, MaxTol, Traits>
 {
 public:
-	typedef T value_type;
 	CToleranceMaxT(	std::string name, std::string desc, T rejectHi) :
 	  CToleranceNomT(std::move(name), std::move(desc), rejectHi)
 	  {}
 };
 
-template <typename T>
-class CToleranceDevT : public CToleranceNomT<CToleranceDevT<T>, T, DevTol>
+template <typename T, typename Traits = TolPerPinTraits>
+class CToleranceDevT : public CToleranceNomT<CToleranceDevT<T>, T, DevTol, Traits>
 {
 public:
-	typedef T value_type;
-
 	CToleranceDevT(	std::string name, std::string desc, T rejectLo, T rejectHi) :
 	  CToleranceNomT(std::move(name), std::move(desc), rejectLo, rejectHi)
 	  {}
