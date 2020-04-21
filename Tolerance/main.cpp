@@ -97,7 +97,7 @@ void TestMinMax()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDev tol1("CToleranceDev", "", 5.0, 100.0);
+	CToleranceMinMax tol1("CToleranceMinMax", "", 5.0, 100.0);
 	tolerances.push_back(&tol1);
 	assert(tol1.CheckTolerance(5.0));
 	assert(tol1.CheckTolerance(100.0));
@@ -134,7 +134,7 @@ void TestEnable()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDev tol1("CToleranceDev", "", 5.0, 100.0);
+	CToleranceMinMax tol1("CToleranceMinMax", "", 5.0, 100.0);
 	tolerances.push_back(&tol1);
 
 	CToleranceMin tol2("CToleranceMin", "", 5.0);
@@ -187,13 +187,13 @@ void TestRelativeMode()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceAbsDev tol1("Pad Size", "", 80.0, 100.0);
+	CToleranceAbsMinMax tol1("Pad Size", "", 80.0, 100.0);
 	tolerances.push_back(&tol1);
 
 	CToleranceAbsMin tol2("Ball Quality", "", 90.0);
 	tolerances.push_back(&tol2);
 	
-	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0);
+	CToleranceMinMax tol3("Ball Pitch", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 	tol3.SetNominal(90.0);
 
@@ -211,7 +211,7 @@ void TestFailResult()
 {
 	CModuleResult moduleResult(g_resultIds);
 
-	CToleranceDev tol1("Pad Size", "", 80.0, 100.0);
+	CToleranceMinMax tol1("Pad Size", "", 80.0, 100.0);
 	tol1.SetPriority(2);
 	moduleResult.AddFailResult(&tol1, "Pad Size: 40 (80.0, 100), Fail");
 
@@ -219,7 +219,7 @@ void TestFailResult()
 	tol2.SetPriority(0);
 	moduleResult.AddFailResult(&tol2, "Ball Quality: 40 < 90.0, Fail");
 
-	CToleranceDev tol3("Ball Pitch", "", 80.0, 100.0);
+	CToleranceMinMax tol3("Ball Pitch", "", 80.0, 100.0);
 	tol3.SetPriority(1);
 	moduleResult.AddFailResult(&tol3, "Ball Pitch: 101 (80.0, 100), Fail");
 
@@ -239,13 +239,13 @@ void TestRejectType()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDev tol1("Pad Size", "", 80.0, 100.0);
+	CToleranceMinMax tol1("Pad Size", "", 80.0, 100.0);
 	tolerances.push_back(&tol1);
 	
 	CToleranceMin tol2("Matrix Code", "", 90.0);
 	tolerances.push_back(&tol2);
 	
-	CToleranceDev tol3("PVI Defect1", "", 80.0, 100.0);
+	CToleranceMinMax tol3("PVI Defect1", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 	
 	cout << "\nTestRejectType\n";

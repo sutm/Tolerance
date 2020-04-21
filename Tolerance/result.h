@@ -82,7 +82,7 @@ private:
 	}
 
 	const std::map<std::string, INSP_RESULT_ID>& m_ResultIds;
-	typedef std::pair<std::string, INSP_RESULT_ID> ResultIdType;
+	using ResultIdType = std::pair<std::string, INSP_RESULT_ID>;
 
 	std::vector<CToleranceBase*> m_FailTolerances;
 	//typedef decltype(CToleranceBase::GetName()) tol_name;

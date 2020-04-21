@@ -1,12 +1,12 @@
 #pragma once
 
-template <typename TDerived>
+template <typename Traits>
 class HasNominal
 {
 public:
-	using T = TDerived::Type;
+	using T = typename Traits::Type;
 
-	bool HasRelativeMode() const override { return true; }
+	bool HasRelativeMode() const { return true; }
 
 	void SetNominal(T value) { m_dNominal = value; }
 	T GetNominal() const { return m_dNominal; }

@@ -4,9 +4,10 @@
 #include <map>
 #include <type_traits>
 #include "toltraits.h"
+#include "tolnominal.h"
 #include "defines.h"
 
-// Abstract base class for tolerance
+
 struct CToleranceBase
 {
 	CToleranceBase(	std::string name, std::string desc) :
@@ -79,6 +80,7 @@ protected:
 	int m_nPriority;
 };
 
+#pragma region tolereance checkers
 // Tolerance Checkers can be one of the following:
 // - DevTol: check both min and max limits (default)
 // - MinTol: check min limit only
@@ -161,6 +163,8 @@ private:
 	T m_dRejectHi;
 };
 
+#pragma endregion
+
 // template class for tolerance
 template <
 	typename T,
@@ -209,15 +213,9 @@ public:
 	{
 		return Traits::HasPerPin();
 	}
-
-	bool HasRelativeMode() const override
-	{ 
-		return false; 
-	}
 };
 
 template <
-	typename Derived,
 	typename T,
 	template <typename U> class TolCheck = MinMaxTol,			// DevTol, MinTol, MaxTol
 	template <typename U> class Traits = TolPerPinTraits
@@ -239,109 +237,95 @@ public:
 };
 
 template <
-	typename Derived,
 	typename T,
 	template <typename U> class TolCheck = MinMaxTol,			// DevTol, MinTol, MaxTol
 	template <typename U> class Traits = TolPerPinTraits
 >
-class CToleranceNomT :	public CToleranceImplBaseT<T, TolCheck, Traits<T>>
+class CToleranceAbsT : public CToleranceImplBaseT<T, TolCheck, Traits<T>>
+{
+public:
+	template <typename U>
+	CToleranceAbsT(std::string name, std::string desc, U rejectLo, U rejectHi,
+		typename std::enable_if<!TolCheck<U>::SingleLimit>::type* = 0) :
+		CToleranceImplBaseT(std::move(name), std::move(desc), rejectLo, rejectHi)
+	{}
+
+	template <typename U>
+	CToleranceAbsT(std::string name, std::string desc, U reject,
+		typename std::enable_if<TolCheck<U>::SingleLimit>::type* = 0) :
+		CToleranceImplBaseT(std::move(name), std::move(desc), reject)
+	{}
+
+	bool HasRelativeMode() const override
+	{
+		return false;
+	}
+};
+
+template <
+	typename T,
+	template <typename U> class TolCheck = MinMaxTol,			// DevTol, MinTol, MaxTol
+	template <typename U> class Traits = TolPerPinTraits
+>
+class CToleranceNomT :	public CToleranceImplBaseT<T, TolCheck, Traits<T>>,
+						public HasNominal<Traits<T>>
 {
 public:
 	template <typename U>
 	CToleranceNomT(	std::string name, std::string desc, U rejectLo, U rejectHi,
 		typename std::enable_if<!TolCheck<U>::SingleLimit>::type* = 0) :
-		CToleranceImplBaseT(std::move(name), std::move(desc), rejectLo, rejectHi),
-		m_bRelative(false)
+		CToleranceImplBaseT(std::move(name), std::move(desc), rejectLo, rejectHi)
 	{}
 
 	template <typename U>
 	CToleranceNomT(std::string name, std::string desc, U reject,
 		typename std::enable_if<TolCheck<U>::SingleLimit>::type* = 0) :
-		CToleranceImplBaseT(std::move(name), std::move(desc), reject),
-		m_bRelative(false)
+		CToleranceImplBaseT(std::move(name), std::move(desc), reject)
 	{}
 
-	virtual bool HasRelativeMode() const { return true; }
-
-	void SetNominal(T value) { m_dNominal = value; }
-	T GetNominal() const { return m_dNominal; }
-
-private:
-	T m_dNominal;
-	bool m_bRelative;
+	bool HasRelativeMode() const override
+	{
+		return true;
+	}
 };
+
+#pragma region template aliases
+template <
+	typename T,
+	template <typename U> class Traits = TolPerPinTraits>
+using CToleranceAbsMinT = CToleranceAbsT<T, MinTol, Traits>;
+
+template <
+	typename T,
+	template <typename U> class Traits = TolPerPinTraits>
+using CToleranceAbsMaxT = CToleranceAbsT<T, MaxTol, Traits>;
+
+template <
+	typename T,
+	template <typename U> class Traits = TolPerPinTraits>
+using CToleranceAbsMinMaxT = CToleranceAbsT<T, MinMaxTol, Traits>;
 
 template <
 	typename T, 
 	template <typename U> class Traits = TolPerPinTraits>
-class CToleranceMinT :	public CToleranceNomT<CToleranceMinT<T>, T, MinTol, Traits>
-{
-public:
-	CToleranceMinT(	std::string name, std::string desc, T rejectLo) :
-	  CToleranceNomT(std::move(name), std::move(desc), rejectLo)
-	  {}
-};
+using CToleranceMinT = CToleranceNomT<T, MinTol, Traits>;
 
 template <
-	typename T, 
+	typename T,
 	template <typename U> class Traits = TolPerPinTraits>
-class CToleranceMaxT : public CToleranceNomT<CToleranceMaxT<T>, T, MaxTol, Traits>
-{
-public:
-	CToleranceMaxT(	std::string name, std::string desc, T rejectHi) :
-	  CToleranceNomT(std::move(name), std::move(desc), rejectHi)
-	  {}
-};
+using CToleranceMaxT = CToleranceNomT<T, MaxTol, Traits>;
 
 template <
-	typename T, 
+	typename T,
 	template <typename U> class Traits = TolPerPinTraits>
-class CToleranceMinMaxT : public CToleranceNomT<CToleranceMinMaxT<T>, T, MinMaxTol, Traits>
-{
-public:
-	CToleranceMinMaxT(	std::string name, std::string desc, T rejectLo, T rejectHi) :
-	  CToleranceNomT(std::move(name), std::move(desc), rejectLo, rejectHi)
-	  {}
-};
+using CToleranceMinMaxT = CToleranceNomT<T, MinMaxTol, Traits>;
 
-typedef CToleranceMinMaxT<double>	CToleranceDev;
-typedef CToleranceMinT<double>	CToleranceMin;
-typedef CToleranceMaxT<double>	CToleranceMax;
+using CToleranceMin = CToleranceMinT<double>;
+using CToleranceMax = CToleranceMaxT<double>;
+using CToleranceMinMax = CToleranceMinMaxT<double>;
 
-template <
-	typename T, 
-	template <typename U> class Traits = TolPerPinTraits>
-class CToleranceAbsMinT :	public CToleranceImplT<CToleranceMinT<T>, T, MinTol, Traits>
-{
-public:
-	CToleranceAbsMinT(	std::string name, std::string desc, T rejectLo) :
-	  CToleranceImplT(std::move(name), std::move(desc), rejectLo)
-	  {}
-};
+using CToleranceAbsMinMax = CToleranceAbsMinMaxT<double>;
+using CToleranceAbsMin = CToleranceAbsMinT<double>;
+using CToleranceAbsMax = CToleranceAbsMaxT<double>;
 
-template <
-	typename T, 
-	template <typename U> class Traits = TolPerPinTraits>
-class CToleranceAbsMaxT : public CToleranceImplT<CToleranceMaxT<T>, T, MaxTol, Traits>
-{
-public:
-	CToleranceAbsMaxT(	std::string name, std::string desc, T rejectHi) :
-	  CToleranceImplT(std::move(name), std::move(desc), rejectHi)
-	  {}
-};
-
-template <
-	typename T, 
-	template <typename U> class Traits = TolPerPinTraits>
-class CToleranceAbsMinMaxT : public CToleranceImplT<CToleranceMinMaxT<T>, T, MinMaxTol, Traits>
-{
-public:
-	CToleranceAbsMinMaxT(	std::string name, std::string desc, T rejectLo, T rejectHi) :
-	  CToleranceImplT(std::move(name), std::move(desc), rejectLo, rejectHi)
-	  {}
-};
-
-typedef CToleranceAbsMinMaxT<double>	CToleranceAbsDev;
-typedef CToleranceAbsMinT<double>	CToleranceAbsMin;
-typedef CToleranceAbsMaxT<double>	CToleranceAbsMax;
-
+#pragma endregion
