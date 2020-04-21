@@ -151,6 +151,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="tolerance.h" />
+    <ClInclude Include="tolnominal.h" />
     <ClInclude Include="toltraits.h" />
   </ItemGroup>
   <ItemGroup>

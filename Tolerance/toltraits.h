@@ -6,10 +6,12 @@
 #define TOL_2D3D            0x00000003L	// TOL_2D | TOL_3D
 #define TOL_PERPIN			0x00000004L
 
-template <unsigned long t_dwFlags = 0>
+template <typename T, unsigned long t_dwFlags = 0>
 class CTolTraits
 {
 public:
+	using Type = T;
+
 	static bool Is3D()
 	{
 		return (t_dwFlags & TOL_3D) != 0;
@@ -31,10 +33,20 @@ public:
 	}
 };
 
-typedef CTolTraits<TOL_2D | TOL_PERPIN> Tol2DPerPinTraits;
-typedef CTolTraits<TOL_3D | TOL_PERPIN> Tol3DPerPinTraits;
-typedef CTolTraits<TOL_2D3D | TOL_PERPIN> TolPerPinTraits;
+template <typename T>
+using Tol2DPerPinTraits = CTolTraits<T, TOL_2D | TOL_PERPIN>;
 
-typedef CTolTraits<TOL_2D> Tol2DTraits;
-typedef CTolTraits<TOL_3D> Tol3DTraits;
-typedef CTolTraits<TOL_2D3D> TolTraits;
+template <typename T>
+using Tol3DPerPinTraits = CTolTraits<T, TOL_3D | TOL_PERPIN>;
+
+template <typename T>
+using TolPerPinTraits = CTolTraits<T, TOL_2D3D | TOL_PERPIN>;
+
+template <typename T>
+using Tol2DTraits = CTolTraits<T, TOL_2D> ;
+
+template <typename T>
+using Tol3DTraits = CTolTraits<T, TOL_3D>;
+
+template <typename T>
+using TolTraits = CTolTraits<T, TOL_2D3D>;

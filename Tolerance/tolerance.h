@@ -165,7 +165,7 @@ private:
 template <
 	typename T,
 	template <typename U> class TolCheck = MinMaxTol,			// DevTol, MinTol, MaxTol
-	typename Traits = TolPerPinTraits
+	typename Traits = TolPerPinTraits<T>
 >
 class CToleranceImplBaseT :	public CToleranceBase, 
 						public TolCheck<T>
@@ -209,15 +209,20 @@ public:
 	{
 		return Traits::HasPerPin();
 	}
+
+	bool HasRelativeMode() const override
+	{ 
+		return false; 
+	}
 };
 
 template <
 	typename Derived,
 	typename T,
 	template <typename U> class TolCheck = MinMaxTol,			// DevTol, MinTol, MaxTol
-	typename Traits = TolPerPinTraits
+	template <typename U> class Traits = TolPerPinTraits
 >
-class CToleranceImplT :	public CToleranceImplBaseT<T, TolCheck, Traits>
+class CToleranceImplT :	public CToleranceImplBaseT<T, TolCheck, Traits<T>>
 {
 public:
 	template <typename U>
@@ -231,17 +236,15 @@ public:
 		typename std::enable_if<TolCheck<U>::SingleLimit>::type* = 0) :
 	CToleranceImplBaseT(std::move(name), std::move(desc), reject)
 	{}
-
-	virtual bool HasRelativeMode() const { return false; }
 };
 
 template <
 	typename Derived,
 	typename T,
 	template <typename U> class TolCheck = MinMaxTol,			// DevTol, MinTol, MaxTol
-	typename Traits = TolPerPinTraits
+	template <typename U> class Traits = TolPerPinTraits
 >
-class CToleranceNomT :	public CToleranceImplBaseT<T, TolCheck, Traits>
+class CToleranceNomT :	public CToleranceImplBaseT<T, TolCheck, Traits<T>>
 {
 public:
 	template <typename U>
@@ -268,7 +271,9 @@ private:
 	bool m_bRelative;
 };
 
-template <typename T, typename Traits = TolPerPinTraits>
+template <
+	typename T, 
+	template <typename U> class Traits = TolPerPinTraits>
 class CToleranceMinT :	public CToleranceNomT<CToleranceMinT<T>, T, MinTol, Traits>
 {
 public:
@@ -277,7 +282,9 @@ public:
 	  {}
 };
 
-template <typename T, typename Traits = TolPerPinTraits>
+template <
+	typename T, 
+	template <typename U> class Traits = TolPerPinTraits>
 class CToleranceMaxT : public CToleranceNomT<CToleranceMaxT<T>, T, MaxTol, Traits>
 {
 public:
@@ -286,7 +293,9 @@ public:
 	  {}
 };
 
-template <typename T, typename Traits = TolPerPinTraits>
+template <
+	typename T, 
+	template <typename U> class Traits = TolPerPinTraits>
 class CToleranceMinMaxT : public CToleranceNomT<CToleranceMinMaxT<T>, T, MinMaxTol, Traits>
 {
 public:
@@ -299,7 +308,9 @@ typedef CToleranceMinMaxT<double>	CToleranceDev;
 typedef CToleranceMinT<double>	CToleranceMin;
 typedef CToleranceMaxT<double>	CToleranceMax;
 
-template <typename T, typename Traits = TolPerPinTraits>
+template <
+	typename T, 
+	template <typename U> class Traits = TolPerPinTraits>
 class CToleranceAbsMinT :	public CToleranceImplT<CToleranceMinT<T>, T, MinTol, Traits>
 {
 public:
@@ -308,7 +319,9 @@ public:
 	  {}
 };
 
-template <typename T, typename Traits = TolPerPinTraits>
+template <
+	typename T, 
+	template <typename U> class Traits = TolPerPinTraits>
 class CToleranceAbsMaxT : public CToleranceImplT<CToleranceMaxT<T>, T, MaxTol, Traits>
 {
 public:
@@ -317,7 +330,9 @@ public:
 	  {}
 };
 
-template <typename T, typename Traits = TolPerPinTraits>
+template <
+	typename T, 
+	template <typename U> class Traits = TolPerPinTraits>
 class CToleranceAbsMinMaxT : public CToleranceImplT<CToleranceMinMaxT<T>, T, MinMaxTol, Traits>
 {
 public:

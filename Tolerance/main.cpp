@@ -164,13 +164,13 @@ void Test2D3D()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDevT<double, TolPerPinTraits>  tol1("Ball Height", "", 5.0, 100.0);
+	CToleranceMinMaxT<double, TolPerPinTraits>  tol1("Ball Height", "", 5.0, 100.0);
 	tolerances.push_back(&tol1);
 
 	CToleranceMaxT<double, Tol3DTraits> tol2("Warpage", "", 5.0);
 	tolerances.push_back(&tol2);
 
-	CToleranceDevT<double, Tol2DPerPinTraits> tol3("Ball Pitch", "", 80.0, 100.0);
+	CToleranceMinMaxT<double, Tol2DPerPinTraits> tol3("Ball Pitch", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 
 	cout << "\nTest2D3D\n";
@@ -264,13 +264,13 @@ void TestHasPerPin()
 {
 	vector<CToleranceBase*> tolerances;
 
-	CToleranceDevT<double, TolPerPinTraits> tol1("Ball Height", "", 80.0, 100.0);
+	CToleranceMinMaxT<double, TolPerPinTraits> tol1("Ball Height", "", 80.0, 100.0);
 	tolerances.push_back(&tol1);
 
 	CToleranceMinT<double, Tol2DTraits> tol2("Matrix Code", "", 90.0);
 	tolerances.push_back(&tol2);
 
-	CToleranceDevT<double, Tol2DTraits> tol3("PVI Defect1", "", 80.0, 100.0);
+	CToleranceMinMaxT<double, Tol2DTraits> tol3("PVI Defect1", "", 80.0, 100.0);
 	tolerances.push_back(&tol3);
 
 	cout << "\nTestHasPerPin\n";
