@@ -85,14 +85,14 @@ protected:
 // - MaxTol: check max limit only
 //
 template<typename T>
-struct DevTol
+struct MinMaxTol
 {
 public:
 	static const bool MinLimit = true;
 	static const bool MaxLimit = true;
 	static const bool SingleLimit = !(MinLimit && MaxLimit);
 
-	DevTol(T dRejectLo, T dRejectHi) : 
+	MinMaxTol(T dRejectLo, T dRejectHi) : 
 		m_dRejectLo(dRejectLo),
 		m_dRejectHi(dRejectHi)
 	{}
@@ -164,7 +164,7 @@ private:
 // template class for tolerance
 template <
 	typename T,
-	template <typename U> class TolCheck = DevTol,			// DevTol, MinTol, MaxTol
+	template <typename U> class TolCheck = MinMaxTol,			// DevTol, MinTol, MaxTol
 	typename Traits = TolPerPinTraits
 >
 class CToleranceImplBaseT :	public CToleranceBase, 
@@ -214,7 +214,7 @@ public:
 template <
 	typename Derived,
 	typename T,
-	template <typename U> class TolCheck = DevTol,			// DevTol, MinTol, MaxTol
+	template <typename U> class TolCheck = MinMaxTol,			// DevTol, MinTol, MaxTol
 	typename Traits = TolPerPinTraits
 >
 class CToleranceImplT :	public CToleranceImplBaseT<T, TolCheck, Traits>
@@ -238,7 +238,7 @@ public:
 template <
 	typename Derived,
 	typename T,
-	template <typename U> class TolCheck = DevTol,			// DevTol, MinTol, MaxTol
+	template <typename U> class TolCheck = MinMaxTol,			// DevTol, MinTol, MaxTol
 	typename Traits = TolPerPinTraits
 >
 class CToleranceNomT :	public CToleranceImplBaseT<T, TolCheck, Traits>
@@ -287,15 +287,15 @@ public:
 };
 
 template <typename T, typename Traits = TolPerPinTraits>
-class CToleranceDevT : public CToleranceNomT<CToleranceDevT<T>, T, DevTol, Traits>
+class CToleranceMinMaxT : public CToleranceNomT<CToleranceMinMaxT<T>, T, MinMaxTol, Traits>
 {
 public:
-	CToleranceDevT(	std::string name, std::string desc, T rejectLo, T rejectHi) :
+	CToleranceMinMaxT(	std::string name, std::string desc, T rejectLo, T rejectHi) :
 	  CToleranceNomT(std::move(name), std::move(desc), rejectLo, rejectHi)
 	  {}
 };
 
-typedef CToleranceDevT<double>	CToleranceDev;
+typedef CToleranceMinMaxT<double>	CToleranceDev;
 typedef CToleranceMinT<double>	CToleranceMin;
 typedef CToleranceMaxT<double>	CToleranceMax;
 
@@ -318,15 +318,15 @@ public:
 };
 
 template <typename T, typename Traits = TolPerPinTraits>
-class CToleranceAbsDevT : public CToleranceImplT<CToleranceDevT<T>, T, DevTol, Traits>
+class CToleranceAbsMinMaxT : public CToleranceImplT<CToleranceMinMaxT<T>, T, MinMaxTol, Traits>
 {
 public:
-	CToleranceAbsDevT(	std::string name, std::string desc, T rejectLo, T rejectHi) :
+	CToleranceAbsMinMaxT(	std::string name, std::string desc, T rejectLo, T rejectHi) :
 	  CToleranceImplT(std::move(name), std::move(desc), rejectLo, rejectHi)
 	  {}
 };
 
-typedef CToleranceAbsDevT<double>	CToleranceAbsDev;
+typedef CToleranceAbsMinMaxT<double>	CToleranceAbsDev;
 typedef CToleranceAbsMinT<double>	CToleranceAbsMin;
 typedef CToleranceAbsMaxT<double>	CToleranceAbsMax;
 
